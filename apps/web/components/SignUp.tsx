@@ -22,6 +22,7 @@ export default function SignUp({ onSwitch, onAuthenticated }: Props) {
 
   const fillSampleData = () => {
     const user = dummyData[Math.floor(Math.random() * dummyData.length)]
+    if (!user) return
     setFormData({
       firstName: user.firstName,
       lastName: user.lastName,

@@ -12,10 +12,14 @@ node_modules
 
 # testing
 coverage
+playwright-report/
+test-results/
 
 # next.js
 .next/
 out/
+apps/web/AGENTS.md
+apps/web/CLAUDE.md
 
 # production
 build
