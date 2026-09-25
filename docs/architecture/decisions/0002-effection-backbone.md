@@ -16,6 +16,9 @@ contracts. Effection contexts inject capabilities, and scopes own each
 operation's child work and cleanup. Runtime entry points adapt Next.js and React
 events to these operations. Server request scopes isolate per-user session and
 other mutable context. Browser scopes own the lifetime of interactive journeys.
+Each server request or action enters one top-level scope, uses `Context.set`
+for its capabilities, and composes session, API, and cleanup operations within
+it instead of starting separate `run` calls.
 Operation outcomes use fp-ts `Either` as described in
 [ADR 0005](0005-fp-ts-errors.md); Effection remains responsible for the
 asynchronous lifetime.

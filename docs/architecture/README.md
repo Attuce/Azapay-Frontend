@@ -33,11 +33,16 @@ flowchart LR
 ```
 
 The browser renders the experience and starts actions. The web runtime is the
-proposed session and API boundary; see [ADR 0004](decisions/0004-nextjs-bff.md).
+session and API boundary; see [ADR 0004](decisions/0004-nextjs-bff.md).
 The AzaPay API remains authoritative. Partner webhooks and settlement processing
 belong to that backend, outside this frontend application.
 
 ## Application structure
+
+The initial runtime contracts live in
+[`apps/web/src/application`](../../apps/web/src/application). Their boundaries
+and usage are documented in [Foundation](foundation.md). The first customer
+feature uses them for account access.
 
 Effection is the backbone of application logic, not an optional request helper.
 Each feature module exposes explicit TypeScript contracts and Effection
@@ -46,13 +51,14 @@ contexts provide implementations for capabilities such as the AzaPay API,
 session, clock, and logger. A scope belongs to one server request or one
 browser workflow; mutable per-user context must never be shared globally.
 
-Jamx supplies the HTTP and logging adapters. `@jamx/http` handles transport,
-interceptors, and transport results; `@jamx/logger` handles structured,
-redacted diagnostics. A Jamx promise-based request must receive the abort signal
-from its Effection scope so ending the operation also ends the request. The
-adapter translates transport results into module-level outcomes.
+Effection contexts carry Jamx's HTTP handler and logger directly. Jamx already
+provides the abstractions needed for transport composition and logging; the
+frontend does not introduce a second HTTP or logger port. Each feature
+operation supplies its scope's abort signal to Jamx and converts the returned
+transport result into a typed application outcome. See
+[ADR 0008](decisions/0008-direct-jamx-capabilities.md).
 
-At the API adapter boundary, Zod `safeParse` validates outgoing payloads and
+At the API contract boundary, Zod `safeParse` validates outgoing payloads and
 incoming external data. A validation failure becomes a typed `Left`, including
 an unexpected-response category when the backend response no longer matches the
 contract. Schemas cover the operations a module actually uses and preserve the
@@ -62,18 +68,19 @@ validation issues in redacted diagnostics rather than customer-facing errors.
 fp-ts `Either` is the error contract. Application operations return
 `Operation<Either<AppError, Value>>`: Effection owns asynchronous lifetime and
 composition, while `Left` and `Right` represent failure and success. Application
-code does not deliberately throw. Adapters catch exceptions and rejected
-promises from external libraries, normalize them to typed `Left` values, and
-preserve Effection halting as cancellation rather than a business error. See
-[ADR 0005](decisions/0005-fp-ts-errors.md).
+code does not deliberately throw. Feature operations catch exceptions and rejected
+promises from external libraries at their boundary, normalize them to typed `Left` values, and
+preserve Effection halting as cancellation rather than a business error. Next.js
+server actions may reject at their configuration or authentication boundary; see
+[ADR 0005](decisions/0005-fp-ts-errors.md) and
+[ADR 0009](decisions/0009-server-action-boundary-throws.md).
 
 ```mermaid
 flowchart TB
   UI[React screens and forms] --> Entry[Next.js and browser entry points]
   Entry --> Ops[Effection feature operations]
-  Ops --> Contracts[Module capability contracts]
-  Contracts --> Adapters[Jamx-backed adapters]
-  Adapters --> API[AzaPay API]
+  Ops --> Jamx[Jamx HTTP handler]
+  Jamx --> API[AzaPay API]
   Context[Effection contexts] --> Ops
 ```
 

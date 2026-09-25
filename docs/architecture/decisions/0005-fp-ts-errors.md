@@ -1,7 +1,7 @@
 # ADR 0005: Use fp-ts Either for application errors
 
 - Date: 2026-09-24
-- Status: Accepted
+- Status: Superseded in part by ADR 0009
 
 ## Context
 
@@ -33,8 +33,8 @@ describes the `Left`/`Right` model and interop helpers.
   entry points.
 - The feature modules use Effection operations plus fp-ts `Either`; they do not
   introduce a second async model such as `TaskEither` for the same workflow.
-- Adapter tests cover HTTP error mapping, rejected promises, unexpected
-  exceptions, and cleanup on halt.
+- Feature operation tests cover HTTP error mapping, rejected promises,
+  unexpected exceptions, and cleanup on halt where those cases apply.
 - Logging may record diagnostic detail, but `AppError` sent to a browser must
   not expose credentials, tokens, or sensitive provider data.
 

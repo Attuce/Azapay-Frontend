@@ -1,7 +1,7 @@
 # ADR 0003: Use Jamx for HTTP and logging adapters
 
 - Date: 2026-09-24
-- Status: Accepted
+- Status: Superseded by [ADR 0008](0008-direct-jamx-capabilities.md)
 
 ## Context
 

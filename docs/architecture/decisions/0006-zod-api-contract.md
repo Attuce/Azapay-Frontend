@@ -18,20 +18,20 @@ contract; the Zod schemas do not redefine backend behaviour. Infer TypeScript
 types from these schemas instead of maintaining a separate handwritten type
 model for the same transport shape.
 
-Validate outgoing payloads and incoming external responses in the API adapter
-using `safeParse`. Map validation failures to a typed fp-ts `Left`, including an
+Validate outgoing payloads and incoming external responses at the API contract
+boundary using `safeParse`. Map validation failures to a typed fp-ts `Left`, including an
 unexpected-response error for invalid backend data. Keep the original response
 out of customer-facing errors and logs. Preserve money values as two-decimal
 strings without numeric coercion.
 
-This specifies the decoding and validation responsibility mentioned in
-[ADR 0003](0003-jamx-adapters.md): Jamx handles HTTP transport while the
-adapter uses Zod schemas to validate the API payload shapes.
+Feature operations call Jamx directly and use Zod schemas to validate API
+payload shapes. [ADR 0008](0008-direct-jamx-capabilities.md) records the direct
+use of Jamx capabilities.
 
 ## Consequences
 
 - Modules receive validated transport data or an explicit error outcome.
-- Contract changes require updating affected schemas, mappings, and adapter
+- Contract changes require updating affected schemas, mappings, and contract
   tests against representative API payloads.
 - Build schemas for used operations as features are implemented; no full API
   schema conversion is required before the first feature.

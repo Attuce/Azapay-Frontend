@@ -1,7 +1,7 @@
 # ADR 0004: Use Next.js as a thin backend for the frontend
 
 - Date: 2026-09-24
-- Status: Proposed
+- Status: Accepted
 
 ## Context
 
@@ -10,7 +10,7 @@ would need to manage these tokens directly. The current web project has a
 Next.js runtime capable of holding a browser-facing session and calling the
 AzaPay API.
 
-## Proposed decision
+## Decision
 
 Use the Next.js runtime as the browser-facing session and API boundary. The
 browser calls same-origin frontend endpoints for interactive authenticated
@@ -32,6 +32,16 @@ and its [authentication guidance](https://nextjs.org/docs/app/guides/authenticat
 - Effection remains the application backbone on both sides of the runtime
   boundary; the BFF is an entry point and adapter.
 
+## Implementation status
+
+The first stage uses server actions for registration, sign-in, and sign-out.
+An encrypted HttpOnly cookie contains the backend token pair. The account page
+reads the cookie on the server and calls `/v1/auth/me` for current user data.
+The server entry point reads deployment settings and supplies them through
+Effection context; session operations do not read environment variables.
+Access-token refresh and authenticated financial journeys are later stages.
+
 ## Review trigger
 
-Accept, revise, or reject this record before implementing session management.
+Review the session strategy before adding token refresh or authenticated
+money-moving requests.
