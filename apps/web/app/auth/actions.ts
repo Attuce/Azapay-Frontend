@@ -2,12 +2,15 @@
 
 import { run } from "effection"
 import { redirect } from "next/navigation"
-import { HttpContext } from "@/src/application/context"
+import { AccessTokenContext, HttpContext } from "@/src/application/context"
 import { register, signIn, signOut } from "@/src/features/auth/operations"
 import { loginSchema, registerSchema } from "@/src/features/auth/schemas"
 import { clearSession, readSession, writeSession } from "@/src/server/session"
 import { loadServerConfig, ServerConfigContext } from "@/src/server/config"
-import { createServerHttp } from "@/src/server/http"
+import {
+  createAuthenticatedServerHttp,
+  createServerHttp,
+} from "@/src/server/http"
 
 /** A safe, user-facing form error; credentials and tokens never return to React. */
 export type AuthFormState = { message: string } | null
@@ -122,12 +125,12 @@ export async function logoutAction(): Promise<void> {
   await run(function* () {
     if (config) {
       yield* ServerConfigContext.set(config)
-      const http = yield* createServerHttp()
-      yield* HttpContext.set(http)
-
       const session = yield* readSession()
       if (session && Date.parse(session.expires_at) > Date.now()) {
-        yield* signOut(session.access_token, session.refresh_token)
+        yield* AccessTokenContext.set(session.access_token)
+        const http = yield* createAuthenticatedServerHttp()
+        yield* HttpContext.set(http)
+        yield* signOut(session.refresh_token)
       }
     }
 

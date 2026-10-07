@@ -7,7 +7,7 @@ import { loginAction, registerAction } from "@/app/auth/actions"
 /** Shared sign-in and registration form; credentials go to server actions. */
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const isRegister = mode === "register"
-  
+
   const [state, action, pending] = useActionState(
     isRegister ? registerAction : loginAction,
     null

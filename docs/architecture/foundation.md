@@ -33,7 +33,9 @@ composable capabilities through Effection context.
 
 ## API boundary
 
-Each feature operation uses the injected Jamx handler directly. The feature
+Each feature operation uses the injected Jamx handler directly. Authenticated
+entry points compose that handler with Jamx's `withAuth` interceptor after
+placing the access token in their request-scoped Effection context. The feature
 defines Zod schemas for the AzaPay operations it needs, validates outgoing
 payloads and incoming responses with `safeParse`, passes its Effection abort
 signal to Jamx, and returns an fp-ts `Either` outcome. Those schemas follow the

@@ -2,26 +2,24 @@ import { run, type Operation } from "effection"
 import { left, right } from "fp-ts/Either"
 import Link from "next/link"
 import { connection } from "next/server"
-import { HttpContext } from "@/src/application/context"
+import { AccessTokenContext, HttpContext } from "@/src/application/context"
 import type { Outcome } from "@/src/application/errors"
 import type { User } from "@/src/features/auth/schemas"
 import { getProfile, getSettings } from "@/src/features/settings/operations"
 import type { Settings } from "@/src/features/settings/schemas"
 import { loadServerConfig, ServerConfigContext } from "@/src/server/config"
-import { createServerHttp } from "@/src/server/http"
+import { createAuthenticatedServerHttp } from "@/src/server/http"
 import { requirePageSession } from "@/src/server/session"
 import { PreferencesForm, ProfileForm } from "@/components/settings-forms"
 
 type SettingsPageData = { readonly profile: User; readonly settings: Settings }
 
 /** Read both settings resources without treating one failed read as success. */
-function* loadSettingsPage(
-  accessToken: string
-): Operation<Outcome<SettingsPageData>> {
-  const profile = yield* getProfile(accessToken)
+function* loadSettingsPage(): Operation<Outcome<SettingsPageData>> {
+  const profile = yield* getProfile()
   if (profile._tag === "Left") return left(profile.left)
 
-  const settings = yield* getSettings(accessToken)
+  const settings = yield* getSettings()
   if (settings._tag === "Left") return left(settings.left)
 
   return right({ profile: profile.right, settings: settings.right })
@@ -39,11 +37,11 @@ export default async function SettingsPage() {
 
   const outcome = await run(function* () {
     yield* ServerConfigContext.set(config)
-    const http = yield* createServerHttp()
-    yield* HttpContext.set(http)
-
     const session = yield* requirePageSession("/settings")
-    return yield* loadSettingsPage(session.access_token)
+    yield* AccessTokenContext.set(session.access_token)
+    const http = yield* createAuthenticatedServerHttp()
+    yield* HttpContext.set(http)
+    return yield* loadSettingsPage()
   })
 
   if (outcome._tag === "Left") {

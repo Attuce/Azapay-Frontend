@@ -1,13 +1,14 @@
-import { compose, createFetchHandler, withBaseUrl } from "@jamx/http"
+import { compose, createFetchHandler, withAuth, withBaseUrl } from "@jamx/http"
 import { run } from "effection"
 import { expect, test, vi } from "vitest"
 import { HttpContext } from "../../application/context"
 import { updateProfile, updateSettings } from "./operations"
 
 function client(fetch: typeof globalThis.fetch) {
-  return compose(withBaseUrl("https://api.example.test"))(
-    createFetchHandler({ fetch })
-  )
+  return compose(
+    withBaseUrl("https://api.example.test"),
+    withAuth("access")
+  )(createFetchHandler({ fetch }))
 }
 
 test("profile update validates and sends only contract fields", async () => {
@@ -40,7 +41,7 @@ test("profile update validates and sends only contract fields", async () => {
 
   const result = await run(function* () {
     yield* HttpContext.set(client(fetch))
-    return yield* updateProfile("access", {
+    return yield* updateProfile({
       full_name: "Ada Okon",
       username: "ada_okon",
       phone_number: null,
@@ -54,7 +55,7 @@ test("invalid settings never reach the API", async () => {
   const fetch = vi.fn<typeof globalThis.fetch>(async () => Response.json({}))
   const result = await run(function* () {
     yield* HttpContext.set(client(fetch))
-    return yield* updateSettings("access", { timezone: "" })
+    return yield* updateSettings({ timezone: "" })
   })
 
   expect(result).toEqual({

@@ -155,17 +155,12 @@ export function* register(
 }
 
 /** Read the backend-owned account record for the presented access token. */
-export function* currentUser(accessToken: string): Operation<Outcome<User>> {
+export function* currentUser(): Operation<Outcome<User>> {
   const http = yield* HttpContext.expect()
   const signal = yield* useAbortSignal()
 
   try {
-    const response = yield* until(
-      http("/v1/auth/me", {
-        headers: { authorization: `Bearer ${accessToken}` },
-        signal,
-      })
-    )
+    const response = yield* until(http("/v1/auth/me", { signal }))
 
     if (!response.ok) return left({ kind: "transport", operation: "whoami" })
 
@@ -191,10 +186,7 @@ export function* currentUser(accessToken: string): Operation<Outcome<User>> {
 }
 
 /** Ask the backend to revoke this refresh token before clearing the web session. */
-export function* signOut(
-  accessToken: string,
-  refreshToken: string
-): Operation<Outcome<void>> {
+export function* signOut(refreshToken: string): Operation<Outcome<void>> {
   const http = yield* HttpContext.expect()
   const signal = yield* useAbortSignal()
 
@@ -203,7 +195,6 @@ export function* signOut(
       http("/v1/auth/logout", {
         method: "POST",
         headers: {
-          authorization: `Bearer ${accessToken}`,
           "content-type": "application/json",
         },
         body: JSON.stringify({ refresh_token: refreshToken }),

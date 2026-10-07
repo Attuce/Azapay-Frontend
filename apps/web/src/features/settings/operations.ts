@@ -1,7 +1,6 @@
 import { json, validate } from "@jamx/http"
 import { until, useAbortSignal, type Operation } from "effection"
 import { left, right } from "fp-ts/Either"
-import type { z } from "zod"
 import { HttpContext } from "../../application/context"
 import type { Outcome } from "../../application/errors"
 import { userSchema, type User } from "../auth/schemas"
@@ -14,111 +13,134 @@ import {
   type SettingsUpdate,
 } from "./schemas"
 
-function* requestJson<T>(
-  operation: string,
-  path: string,
-  accessToken: string,
-  schema: z.ZodType<T>,
-  init?: RequestInit
-): Operation<Outcome<T>> {
+/** Read the customer's editable profile through the authenticated Jamx handler. */
+export function* getProfile(): Operation<Outcome<User>> {
   const http = yield* HttpContext.expect()
   const signal = yield* useAbortSignal()
-
   try {
-    const response = yield* until(
-      http(path, {
-        ...init,
-        headers: {
-          authorization: `Bearer ${accessToken}`,
-          ...init?.headers,
-        },
-        signal,
-      })
-    )
-
-    if (!response.ok) return left({ kind: "transport", operation })
+    const response = yield* until(http("/v1/users/me", { signal }))
+    if (!response.ok) {
+      return left({ kind: "transport", operation: "get-profile" })
+    }
     if (!response.value.ok) {
       return left({
         kind: "http-status",
-        operation,
+        operation: "get-profile",
         status: response.value.status,
       })
     }
-
-    const decoded = yield* until(json(response.value))
-    const validated = yield* until(validate(decoded, schema))
-    if (!validated.ok) return left({ kind: "invalid-response", operation })
-
-    return right(validated.value as T)
+    const validated = yield* until(
+      validate(yield* until(json(response.value)), userSchema)
+    )
+    return validated.ok
+      ? right(validated.value)
+      : left({ kind: "invalid-response", operation: "get-profile" })
   } catch {
-    return left({ kind: "transport", operation })
+    return left({ kind: "transport", operation: "get-profile" })
   }
 }
 
-/** Read the customer's editable profile. */
-export function* getProfile(accessToken: string): Operation<Outcome<User>> {
-  return yield* requestJson<User>(
-    "get-profile",
-    "/v1/users/me",
-    accessToken,
-    userSchema
-  )
-}
-
 /** Update only profile fields supported by the API contract. */
-export function* updateProfile(
-  accessToken: string,
-  input: ProfileUpdate
-): Operation<Outcome<User>> {
+export function* updateProfile(input: ProfileUpdate): Operation<Outcome<User>> {
   const request = profileUpdateSchema.safeParse(input)
   if (!request.success) {
     return left({ kind: "invalid-request", operation: "update-profile" })
   }
-
-  return yield* requestJson<User>(
-    "update-profile",
-    "/v1/users/me",
-    accessToken,
-    userSchema,
-    {
-      method: "PATCH",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(request.data),
+  const http = yield* HttpContext.expect()
+  const signal = yield* useAbortSignal()
+  try {
+    const response = yield* until(
+      http("/v1/users/me", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(request.data),
+        signal,
+      })
+    )
+    if (!response.ok) {
+      return left({ kind: "transport", operation: "update-profile" })
     }
-  )
+    if (!response.value.ok) {
+      return left({
+        kind: "http-status",
+        operation: "update-profile",
+        status: response.value.status,
+      })
+    }
+    const validated = yield* until(
+      validate(yield* until(json(response.value)), userSchema)
+    )
+    return validated.ok
+      ? right(validated.value)
+      : left({ kind: "invalid-response", operation: "update-profile" })
+  } catch {
+    return left({ kind: "transport", operation: "update-profile" })
+  }
 }
 
 /** Read the customer's notification and timezone preferences. */
-export function* getSettings(
-  accessToken: string
-): Operation<Outcome<Settings>> {
-  return yield* requestJson<Settings>(
-    "get-settings",
-    "/v1/settings",
-    accessToken,
-    settingsSchema
-  )
+export function* getSettings(): Operation<Outcome<Settings>> {
+  const http = yield* HttpContext.expect()
+  const signal = yield* useAbortSignal()
+  try {
+    const response = yield* until(http("/v1/settings", { signal }))
+    if (!response.ok) {
+      return left({ kind: "transport", operation: "get-settings" })
+    }
+    if (!response.value.ok) {
+      return left({
+        kind: "http-status",
+        operation: "get-settings",
+        status: response.value.status,
+      })
+    }
+    const validated = yield* until(
+      validate(yield* until(json(response.value)), settingsSchema)
+    )
+    return validated.ok
+      ? right(validated.value)
+      : left({ kind: "invalid-response", operation: "get-settings" })
+  } catch {
+    return left({ kind: "transport", operation: "get-settings" })
+  }
 }
 
 /** Update only preferences supported by the API contract. */
 export function* updateSettings(
-  accessToken: string,
   input: SettingsUpdate
 ): Operation<Outcome<Settings>> {
   const request = settingsUpdateSchema.safeParse(input)
   if (!request.success) {
     return left({ kind: "invalid-request", operation: "update-settings" })
   }
-
-  return yield* requestJson<Settings>(
-    "update-settings",
-    "/v1/settings",
-    accessToken,
-    settingsSchema,
-    {
-      method: "PATCH",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(request.data),
+  const http = yield* HttpContext.expect()
+  const signal = yield* useAbortSignal()
+  try {
+    const response = yield* until(
+      http("/v1/settings", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(request.data),
+        signal,
+      })
+    )
+    if (!response.ok) {
+      return left({ kind: "transport", operation: "update-settings" })
     }
-  )
+    if (!response.value.ok) {
+      return left({
+        kind: "http-status",
+        operation: "update-settings",
+        status: response.value.status,
+      })
+    }
+    const validated = yield* until(
+      validate(yield* until(json(response.value)), settingsSchema)
+    )
+    return validated.ok
+      ? right(validated.value)
+      : left({ kind: "invalid-response", operation: "update-settings" })
+  } catch {
+    return left({ kind: "transport", operation: "update-settings" })
+  }
 }

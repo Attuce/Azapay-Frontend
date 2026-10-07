@@ -1,4 +1,4 @@
-import { compose, createFetchHandler, withBaseUrl } from "@jamx/http"
+import { compose, createFetchHandler, withAuth, withBaseUrl } from "@jamx/http"
 import { run } from "effection"
 import { expect, test, vi } from "vitest"
 import { HttpContext } from "../../application/context"
@@ -19,10 +19,11 @@ const user = {
   updated_at: "2026-09-24T10:00:00Z",
 }
 
-function client(fetch: typeof globalThis.fetch) {
-  return compose(withBaseUrl("https://api.example.test"))(
-    createFetchHandler({ fetch })
-  )
+function client(fetch: typeof globalThis.fetch, authenticated = false) {
+  return compose(
+    withBaseUrl("https://api.example.test"),
+    ...(authenticated ? [withAuth("access")] : [])
+  )(createFetchHandler({ fetch }))
 }
 
 test("sign-in sends the OpenAPI payload and validates the token response", async () => {
@@ -44,7 +45,7 @@ test("sign-in sends the OpenAPI payload and validates the token response", async
   })
 
   const result = await run(function* () {
-    yield* HttpContext.set(client(fetch))
+    yield* HttpContext.set(client(fetch, true))
     return yield* signIn({ email: "ada@example.com", password: "secret123" })
   })
   expect(result._tag).toBe("Right")
@@ -54,7 +55,7 @@ test("sign-in sends the OpenAPI payload and validates the token response", async
 test("invalid registration never reaches the API", async () => {
   const fetch = vi.fn<typeof globalThis.fetch>(async () => Response.json({}))
   const result = await run(function* () {
-    yield* HttpContext.set(client(fetch))
+    yield* HttpContext.set(client(fetch, true))
     return yield* register({
       email: "invalid",
       password: "short",
@@ -97,7 +98,7 @@ test("a malformed account response is not shown as a signed-in user", async () =
   )
   const result = await run(function* () {
     yield* HttpContext.set(client(fetch))
-    return yield* currentUser("access")
+    return yield* currentUser()
   })
   expect(result).toEqual({
     _tag: "Left",
@@ -120,7 +121,7 @@ test("halting an account request aborts the backend fetch", async () => {
 
   const task = run(function* () {
     yield* HttpContext.set(client(fetch))
-    return yield* currentUser("access")
+    return yield* currentUser()
   })
   await vi.waitFor(() => expect(fetch).toHaveBeenCalledOnce())
   await task.halt()

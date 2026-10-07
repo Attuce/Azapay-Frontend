@@ -2,7 +2,7 @@
 
 import { run } from "effection"
 import { revalidatePath } from "next/cache"
-import { HttpContext } from "@/src/application/context"
+import { AccessTokenContext, HttpContext } from "@/src/application/context"
 import {
   updateProfile,
   updateSettings,
@@ -12,7 +12,7 @@ import {
   settingsUpdateSchema,
 } from "@/src/features/settings/schemas"
 import { loadServerConfig, ServerConfigContext } from "@/src/server/config"
-import { createServerHttp } from "@/src/server/http"
+import { createAuthenticatedServerHttp } from "@/src/server/http"
 import { readUsableSession } from "@/src/server/session"
 
 export type SettingsFormState = { message: string; success?: boolean } | null
@@ -37,15 +37,15 @@ export async function updateProfileAction(
 
   const outcome = await run(function* () {
     yield* ServerConfigContext.set(config)
-    const http = yield* createServerHttp()
-    yield* HttpContext.set(http)
-
     const session = yield* readUsableSession()
     if (session._tag === "Left" || session.right === null) {
       throw new Error("An authenticated session is required")
     }
 
-    return yield* updateProfile(session.right.access_token, input.data)
+    yield* AccessTokenContext.set(session.right.access_token)
+    const http = yield* createAuthenticatedServerHttp()
+    yield* HttpContext.set(http)
+    return yield* updateProfile(input.data)
   })
 
   if (outcome._tag === "Left") {
@@ -76,16 +76,16 @@ export async function updatePreferencesAction(
 
   const outcome = await run(function* () {
     yield* ServerConfigContext.set(config)
-    const http = yield* createServerHttp()
-    yield* HttpContext.set(http)
-
     const session = yield* readUsableSession()
-    
+
     if (session._tag === "Left" || session.right === null) {
       throw new Error("An authenticated session is required")
     }
 
-    return yield* updateSettings(session.right.access_token, input.data)
+    yield* AccessTokenContext.set(session.right.access_token)
+    const http = yield* createAuthenticatedServerHttp()
+    yield* HttpContext.set(http)
+    return yield* updateSettings(input.data)
   })
 
   if (outcome._tag === "Left") {

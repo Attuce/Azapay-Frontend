@@ -84,10 +84,13 @@ flowchart TB
   Context[Effection contexts] --> Ops
 ```
 
-Suggested module boundaries are `account`, `funding`, `flow`, `aza`, `activity`,
-and `settings`. Each module owns its operations, contract-facing types, mapping
-from API responses, and tests. Shared code should be limited to cross-cutting
-capabilities such as money formatting, dates, session, and transport.
+Suggested module boundaries are `account`, `dashboard`, `funding`, `flow`,
+`aza`, `activity`, and `settings`. The initial read-only dashboard combines
+backend-owned overview, Flow, category, and audit responses for presentation;
+the source operations remain contract-specific. Each module owns its
+operations, contract-facing types, mapping from API responses, and tests.
+Shared code should be limited to cross-cutting capabilities such as money
+formatting, dates, session, and transport.
 
 ## Rules that apply to every feature
 

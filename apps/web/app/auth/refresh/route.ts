@@ -9,7 +9,7 @@ import { readUsableSession } from "@/src/server/session"
 /** Rotate an expired access token, then return only to a local application path. */
 export async function GET(request: NextRequest) {
   const requestedPath = request.nextUrl.searchParams.get("returnTo")
-  
+
   const returnTo =
     requestedPath?.startsWith("/") && !requestedPath.startsWith("//")
       ? requestedPath
