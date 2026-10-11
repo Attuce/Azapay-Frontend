@@ -9,12 +9,15 @@ import { requirePageSession } from "@/src/server/session"
 import {
   completeBankLink,
   listBanks,
+  revokeFundingConnection,
   startBankLink,
+  updateFundingConnection,
 } from "@/src/features/funding/operations"
 import {
   bankLinkOtpSchema,
   bankLinkIdSchema,
   bankLinkSelectionSchema,
+  fundingConnectionIdSchema,
 } from "@/src/features/funding/schemas"
 
 export type FundingFormState =
@@ -161,4 +164,60 @@ export async function completeBankLinkAction(
     success: true,
     fundingConnectionId: outcome.right.funding_connection_id ?? undefined,
   }
+}
+
+/** Mark a connected funding source as the account's default source. */
+export async function setDefaultFundingConnectionAction(
+  _state: FundingFormState,
+  formData: FormData
+): Promise<FundingFormState> {
+  const id = fundingConnectionIdSchema.safeParse(formData.get("funding_connection_id"))
+  if (!id.success) return { message: "Select a valid funding source.", success: false }
+
+  const config = loadServerConfig()
+  if (!config) return { message: "Funding connections are temporarily unavailable.", success: false }
+
+  const outcome = await run(function* () {
+    yield* ServerConfigContext.set(config)
+    const session = yield* requirePageSession("/funding")
+    yield* AccessTokenContext.set(session.access_token)
+    const http = yield* createAuthenticatedServerHttp()
+    yield* HttpContext.set(http)
+    return yield* updateFundingConnection(id.data, { is_default: true })
+  })
+
+  if (outcome._tag === "Left") {
+    return { message: "We couldn’t update your default funding source. Refresh and try again.", success: false }
+  }
+
+  revalidatePath("/funding")
+  return { message: "Default funding source updated.", success: true }
+}
+
+/** Revoke a connected funding source at the customer's request. */
+export async function revokeFundingConnectionAction(
+  _state: FundingFormState,
+  formData: FormData
+): Promise<FundingFormState> {
+  const id = fundingConnectionIdSchema.safeParse(formData.get("funding_connection_id"))
+  if (!id.success) return { message: "Select a valid funding source.", success: false }
+
+  const config = loadServerConfig()
+  if (!config) return { message: "Funding connections are temporarily unavailable.", success: false }
+
+  const outcome = await run(function* () {
+    yield* ServerConfigContext.set(config)
+    const session = yield* requirePageSession("/funding")
+    yield* AccessTokenContext.set(session.access_token)
+    const http = yield* createAuthenticatedServerHttp()
+    yield* HttpContext.set(http)
+    return yield* revokeFundingConnection(id.data)
+  })
+
+  if (outcome._tag === "Left") {
+    return { message: "We couldn’t remove this funding source. Refresh and try again.", success: false }
+  }
+
+  revalidatePath("/funding")
+  return { message: "Funding source removed.", success: true }
 }

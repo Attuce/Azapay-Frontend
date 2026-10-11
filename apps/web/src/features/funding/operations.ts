@@ -10,6 +10,7 @@ import {
   bankLinkStartSchema,
   bankSchema,
   fundingConnectionCreateSchema,
+  fundingConnectionIdSchema,
   fundingConnectionSchema,
   fundingConnectionUpdateSchema,
   type Bank,
@@ -28,8 +29,9 @@ export function* listBanks(): Operation<Outcome<Bank[]>> {
 
   try {
     const response = yield* until(http("/v1/banks", { signal }))
-    if (!response.ok)
+    if (!response.ok) {
       return left({ kind: "transport", operation: "list-banks" })
+    }
     if (!response.value.ok) {
       return left({
         kind: "http-status",
@@ -75,8 +77,6 @@ export function* startBankLink(
     if (!response.ok) {
       return left({ kind: "transport", operation: "start-bank-link" })
     }
-
-    console.log(yield* until(response.value.clone().text()))
 
     if (!response.value.ok) {
       return left({
@@ -237,12 +237,17 @@ export function* listFundingConnections(): Operation<
 export function* getFundingConnection(
   fundingConnectionId: string
 ): Operation<Outcome<FundingConnection>> {
+  const id = fundingConnectionIdSchema.safeParse(fundingConnectionId)
+  if (!id.success) {
+    return left({ kind: "invalid-request", operation: "get-funding-connection" })
+  }
+
   const http = yield* HttpContext.expect()
   const signal = yield* useAbortSignal()
 
   try {
     const response = yield* until(
-      http(`/v1/funding-connections/${fundingConnectionId}`, { signal })
+      http(`/v1/funding-connections/${id.data}`, { signal })
     )
 
     if (!response.ok) {
@@ -277,7 +282,8 @@ export function* updateFundingConnection(
   input: FundingConnectionUpdateInput
 ): Operation<Outcome<FundingConnection>> {
   const request = fundingConnectionUpdateSchema.safeParse(input)
-  if (!request.success) {
+  const id = fundingConnectionIdSchema.safeParse(fundingConnectionId)
+  if (!request.success || !id.success) {
     return left({
       kind: "invalid-request",
       operation: "update-funding-connection",
@@ -289,7 +295,7 @@ export function* updateFundingConnection(
 
   try {
     const response = yield* until(
-      http(`/v1/funding-connections/${fundingConnectionId}`, {
+      http(`/v1/funding-connections/${id.data}`, {
         method: "PATCH",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(request.data),
@@ -327,19 +333,25 @@ export function* updateFundingConnection(
 export function* revokeFundingConnection(
   fundingConnectionId: string
 ): Operation<Outcome<void>> {
+  const id = fundingConnectionIdSchema.safeParse(fundingConnectionId)
+  if (!id.success) {
+    return left({ kind: "invalid-request", operation: "revoke-funding-connection" })
+  }
+
   const http = yield* HttpContext.expect()
   const signal = yield* useAbortSignal()
 
   try {
     const response = yield* until(
-      http(`/v1/funding-connections/${fundingConnectionId}/revoke`, {
+      http(`/v1/funding-connections/${id.data}/revoke`, {
         method: "POST",
         signal,
       })
     )
 
-    if (!response.ok)
+    if (!response.ok) {
       return left({ kind: "transport", operation: "revoke-funding-connection" })
+    }
     if (!response.value.ok) {
       return left({
         kind: "http-status",

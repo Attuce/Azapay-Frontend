@@ -85,10 +85,13 @@ flowchart TB
 ```
 
 Suggested module boundaries are `account`, `dashboard`, `funding`, `flow`,
-`aza`, `activity`, and `settings`. The initial read-only dashboard combines
-backend-owned overview, Flow, category, and audit responses for presentation;
-the source operations remain contract-specific. Each module owns its
-operations, contract-facing types, mapping from API responses, and tests.
+`aza`, `activity`, and `settings`. The read-only dashboard combines
+backend-owned overview, Flow, category, and audit responses for presentation.
+Flow domain reads and writes live in the separate `flow` feature module;
+dashboard operations only load data for the account summary. The Flow module
+owns Flow categories, payment and savings instructions, and their API-backed
+run previews and history. Each module owns its operations, contract-facing types,
+mapping from API responses, and tests.
 Shared code should be limited to cross-cutting capabilities such as money
 formatting, dates, session, and transport.
 

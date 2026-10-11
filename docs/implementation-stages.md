@@ -8,7 +8,7 @@ The [OpenAPI contract](https://azapay.onrender.com/openapi.json) supplies the en
 | 2     | Refresh expiring sessions; profile and account settings                        | Implemented |
 | 3     | Read the backend's overview, Flow, categories, and activity                    | Implemented |
 | 4     | Connect funding sources and handle provider steps                              | In progress |
-| 5     | Create and manage Flow spending and saving instructions                        | Planned     |
+| 5     | Create and manage Flow spending and saving instructions                        | Implemented |
 | 6     | Create and manage Azas, invitations, contributions, and withdrawals            | Planned     |
 | 7     | Complete settings, consent, deactivation, accessibility, and journey hardening | Planned     |
 
@@ -23,3 +23,13 @@ and `/v1/audit/events` as a read-only customer dashboard. It preserves the API
 money strings and does not derive balances, fees, execution, or settlement state.
 
 Financial stages must display amounts and outcomes supplied by the API. No balance, fee, or settlement state is inferred in the frontend.
+
+Stage 5 supports Flow settings and category lifecycle, payment and savings
+instruction creation, amount and schedule edits, destination updates while
+backend state allows them, payment activation/pause, savings pause/resume,
+funding-source selection, API bank and existing-Aza selection, upcoming-run
+readiness, and the historical run timeline. The backend owns category
+conservation, readiness, fees, settlement, and recovery outcomes. Full destination
+account numbers are removed on the server before payment or run-history data is
+sent to client components. Savings instructions can target existing Azas; Aza
+creation and lifecycle remain Stage 6.

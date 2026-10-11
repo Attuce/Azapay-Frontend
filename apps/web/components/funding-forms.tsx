@@ -3,6 +3,8 @@
 import { useActionState } from "react"
 import {
   completeBankLinkAction,
+  revokeFundingConnectionAction,
+  setDefaultFundingConnectionAction,
   startBankLinkAction,
   type FundingFormState,
 } from "@/app/(authenticated)/funding/actions"
@@ -21,6 +23,61 @@ function Status({ state }: { state: FundingFormState }) {
     >
       {state.message}
     </p>
+  )
+}
+
+function FundingConnectionCard({ connection }: { connection: FundingConnection }) {
+  const [defaultState, defaultAction, defaultPending] = useActionState(
+    setDefaultFundingConnectionAction,
+    null
+  )
+  const [revokeState, revokeAction, revokePending] = useActionState(
+    revokeFundingConnectionAction,
+    null
+  )
+
+  return (
+    <div className="rounded-xl border border-[#dfe7e4] bg-[#f7faf8] p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="font-semibold">{connection.bank_name ?? "Bank account"}</p>
+          <p className="mt-1 text-sm text-[#506665]">
+            {connection.account_name ?? "Customer account"} ·••• {connection.account_number_last4 ?? "0000"}
+          </p>
+        </div>
+        <span className="rounded-full bg-[#eff4f2] px-3 py-1 text-xs font-semibold capitalize text-[#162c3a]">
+          {connection.status}
+        </span>
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-[#506665]">
+        <span>{connection.kind}</span>
+        <span>•</span>
+        <span>{connection.currency}</span>
+        {connection.is_default ? <span>• Default source</span> : null}
+      </div>
+
+      {connection.status !== "revoked" ? (
+        <div className="mt-4 flex flex-wrap gap-3">
+          {!connection.is_default && connection.status === "active" ? (
+            <form action={defaultAction}>
+              <input type="hidden" name="funding_connection_id" value={connection.id} />
+              <button disabled={defaultPending} className="rounded-full border border-[#193a3d] px-4 py-2 text-sm font-semibold text-[#193a3d] disabled:opacity-60">
+                {defaultPending ? "Updating…" : "Make default"}
+              </button>
+              <Status state={defaultState} />
+            </form>
+          ) : null}
+          <form action={revokeAction}>
+            <input type="hidden" name="funding_connection_id" value={connection.id} />
+            <button disabled={revokePending} className="rounded-full border border-[#c77a64] px-4 py-2 text-sm font-semibold text-[#8c3c24] disabled:opacity-60">
+              {revokePending ? "Removing…" : "Remove source"}
+            </button>
+            <Status state={revokeState} />
+          </form>
+        </div>
+      ) : null}
+    </div>
   )
 }
 
@@ -169,28 +226,7 @@ export function FundingJourney({
         ) : (
           <div className="mt-5 space-y-4">
             {connections.map((connection) => (
-              <div
-                key={connection.id}
-                className="rounded-xl border border-[#dfe7e4] bg-[#f7faf8] p-4"
-              >
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <p className="font-semibold">{connection.bank_name ?? "Bank account"}</p>
-                    <p className="mt-1 text-sm text-[#506665]">
-                      {connection.account_name ?? "Customer account"} ·••• {connection.account_number_last4 ?? "0000"}
-                    </p>
-                  </div>
-                  <span className="rounded-full bg-[#eff4f2] px-3 py-1 text-xs font-semibold capitalize text-[#162c3a]">
-                    {connection.status}
-                  </span>
-                </div>
-                <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-[#506665]">
-                  <span>{connection.kind}</span>
-                  <span>•</span>
-                  <span>{connection.currency}</span>
-                  {connection.is_default ? <span>• Default source</span> : null}
-                </div>
-              </div>
+              <FundingConnectionCard key={connection.id} connection={connection} />
             ))}
           </div>
         )}

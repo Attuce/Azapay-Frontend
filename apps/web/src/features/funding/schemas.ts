@@ -88,6 +88,9 @@ export const bankLinkOtpSchema = z.object({
 /** UUID path parameter for a bank-link provider challenge. */
 export const bankLinkIdSchema = z.uuid()
 
+/** UUID path parameter for a funding source the customer manages. */
+export const fundingConnectionIdSchema = z.uuid()
+
 export type Bank = z.infer<typeof bankSchema>
 export type FundingConnection = z.infer<typeof fundingConnectionSchema>
 export type BankLink = z.infer<typeof bankLinkSchema>

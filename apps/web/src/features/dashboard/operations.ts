@@ -5,14 +5,12 @@ import { HttpContext } from "../../application/context"
 import type { Outcome } from "../../application/errors"
 import {
   activitySchema,
-  categorySchema,
-  flowSchema,
   overviewSchema,
   type Activity,
   type Category,
-  type Flow,
   type Overview,
 } from "./schemas"
+import { categorySchema as flowCategorySchema } from "../flow/schemas"
 
 /** Read the backend's whole-account financial snapshot. */
 export function* getOverview(): Operation<Outcome<Overview>> {
@@ -41,31 +39,6 @@ export function* getOverview(): Operation<Outcome<Overview>> {
   }
 }
 
-/** Read the customer's backend-provisioned Flow spending domain. */
-export function* getFlow(): Operation<Outcome<Flow>> {
-  const http = yield* HttpContext.expect()
-  const signal = yield* useAbortSignal()
-  try {
-    const response = yield* until(http("/v1/flows/me", { signal }))
-    if (!response.ok) return left({ kind: "transport", operation: "get-flow" })
-    if (!response.value.ok) {
-      return left({
-        kind: "http-status",
-        operation: "get-flow",
-        status: response.value.status,
-      })
-    }
-    const decoded = yield* until(json(response.value))
-    const validated = yield* until(validate(decoded, flowSchema))
-    if (!validated.ok) {
-      return left({ kind: "invalid-response", operation: "get-flow" })
-    }
-    return right(validated.value)
-  } catch {
-    return left({ kind: "transport", operation: "get-flow" })
-  }
-}
-
 /** List all categories; the screen presents the Flow-owned entries. */
 export function* listCategories(): Operation<Outcome<Category[]>> {
   const http = yield* HttpContext.expect()
@@ -83,7 +56,7 @@ export function* listCategories(): Operation<Outcome<Category[]>> {
       })
     }
     const decoded = yield* until(json(response.value))
-    const validated = yield* until(validate(decoded, categorySchema.array()))
+    const validated = yield* until(validate(decoded, flowCategorySchema.array()))
     if (!validated.ok) {
       return left({ kind: "invalid-response", operation: "list-categories" })
     }

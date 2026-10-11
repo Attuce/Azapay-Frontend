@@ -5,9 +5,12 @@ import { HttpContext } from "../../application/context"
 import {
   completeBankLink,
   createFundingConnection,
+  getFundingConnection,
   listBanks,
   listFundingConnections,
+  revokeFundingConnection,
   startBankLink,
+  updateFundingConnection,
 } from "./operations"
 
 function client(fetch: typeof globalThis.fetch) {
@@ -129,6 +132,48 @@ test("invalid bank-link IDs never reach the OTP endpoint", async () => {
   expect(result).toEqual({
     _tag: "Left",
     left: { kind: "invalid-request", operation: "complete-bank-link" },
+  })
+  expect(fetch).not.toHaveBeenCalled()
+})
+
+test("invalid funding connection IDs never reach the read endpoint", async () => {
+  const fetch = vi.fn<typeof globalThis.fetch>(async () => Response.json({}))
+  const result = await run(function* () {
+    yield* HttpContext.set(client(fetch))
+    return yield* getFundingConnection("../unexpected-path")
+  })
+
+  expect(result).toEqual({
+    _tag: "Left",
+    left: { kind: "invalid-request", operation: "get-funding-connection" },
+  })
+  expect(fetch).not.toHaveBeenCalled()
+})
+
+test("invalid funding connection IDs never reach the update endpoint", async () => {
+  const fetch = vi.fn<typeof globalThis.fetch>(async () => Response.json({}))
+  const result = await run(function* () {
+    yield* HttpContext.set(client(fetch))
+    return yield* updateFundingConnection("../unexpected-path", { is_default: true })
+  })
+
+  expect(result).toEqual({
+    _tag: "Left",
+    left: { kind: "invalid-request", operation: "update-funding-connection" },
+  })
+  expect(fetch).not.toHaveBeenCalled()
+})
+
+test("invalid funding connection IDs never reach the revoke endpoint", async () => {
+  const fetch = vi.fn<typeof globalThis.fetch>(async () => Response.json({}))
+  const result = await run(function* () {
+    yield* HttpContext.set(client(fetch))
+    return yield* revokeFundingConnection("../unexpected-path")
+  })
+
+  expect(result).toEqual({
+    _tag: "Left",
+    left: { kind: "invalid-request", operation: "revoke-funding-connection" },
   })
   expect(fetch).not.toHaveBeenCalled()
 })

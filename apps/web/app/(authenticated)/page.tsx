@@ -8,17 +8,17 @@ import type { Outcome } from "@/src/application/errors"
 import { currentUser } from "@/src/features/auth/operations"
 import type { User } from "@/src/features/auth/schemas"
 import {
-  getFlow,
   getOverview,
   listActivity,
   listCategories,
 } from "@/src/features/dashboard/operations"
+import { getFlow } from "@/src/features/flow/operations"
 import type {
   Activity,
   Category,
-  Flow,
   Overview,
 } from "@/src/features/dashboard/schemas"
+import type { Flow } from "@/src/features/flow/schemas"
 import { loadServerConfig, ServerConfigContext } from "@/src/server/config"
 import { createAuthenticatedServerHttp } from "@/src/server/http"
 import { requirePageSession } from "@/src/server/session"
@@ -99,6 +99,12 @@ export default async function HomePage() {
           </span>
           <form action={logoutAction}>
             <div className="flex items-center gap-3">
+              <Link
+                className="text-sm font-semibold hover:underline"
+                href="/flow"
+              >
+                Flow
+              </Link>
               <Link
                 className="text-sm font-semibold hover:underline"
                 href="/funding"
