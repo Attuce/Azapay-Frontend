@@ -5,7 +5,7 @@ import { useActionState } from "react"
 import { loginAction, registerAction } from "@/app/auth/actions"
 
 /** Shared sign-in and registration form; credentials go to server actions. */
-export function AuthForm({ mode }: { mode: "login" | "register" }) {
+export function AuthForm({ mode, notice }: { mode: "login" | "register"; readonly notice?: string }) {
   const isRegister = mode === "register"
 
   const [state, action, pending] = useActionState(
@@ -14,7 +14,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
   )
 
   return (
-    <main className="grid min-h-svh bg-[#f3f5f1] text-[#172d31] lg:grid-cols-[minmax(0,1fr)_minmax(440px,0.82fr)]">
+    <main id="main-content" tabIndex={-1} className="grid min-h-svh bg-[#f3f5f1] text-[#172d31] lg:grid-cols-[minmax(0,1fr)_minmax(440px,0.82fr)]">
       <section className="relative hidden overflow-hidden bg-[#193a3d] px-12 py-12 text-white lg:flex lg:flex-col lg:justify-between">
         <span className="text-2xl font-bold tracking-tight">
           aza<span className="text-[#e69a72]">pay</span>
@@ -24,9 +24,9 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
           <p className="mb-5 text-sm font-medium tracking-[0.2em] text-[#a9d3c9] uppercase">
             Money, with direction
           </p>
-          <h1 className="text-5xl leading-[1.1] font-semibold tracking-tight">
+          <h2 className="text-5xl leading-[1.1] font-semibold tracking-tight">
             Make room for what matters next.
-          </h1>
+          </h2>
           <p className="mt-6 max-w-md text-lg leading-relaxed text-[#c7d9d3]">
             Set up your account to manage spending and saving from one place.
           </p>
@@ -49,9 +49,9 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
           <p className="text-sm font-semibold tracking-[0.16em] text-[#a54d2f] uppercase">
             {isRegister ? "New account" : "Welcome back"}
           </p>
-          <h2 className="mt-3 text-4xl font-semibold tracking-tight">
+          <h1 className="mt-3 text-4xl font-semibold tracking-tight">
             {isRegister ? "Create your account" : "Sign in to AzaPay"}
-          </h2>
+          </h1>
           <p className="mt-3 text-[#506665]">
             {isRegister ? "Already have an account?" : "New to AzaPay?"}{" "}
             <Link
@@ -61,6 +61,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
               {isRegister ? "Sign in" : "Create an account"}
             </Link>
           </p>
+          {notice && <p role="status" className="mt-4 rounded-xl border border-[#9eafab] bg-white px-4 py-3 text-sm">{notice}</p>}
 
           <form action={action} className="mt-10 space-y-5">
             {isRegister && (
@@ -109,13 +110,14 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
                 name="password"
                 type="password"
                 autoComplete={isRegister ? "new-password" : "current-password"}
+                aria-describedby={isRegister ? "password-requirements" : undefined}
                 required
                 minLength={isRegister ? 8 : 1}
                 maxLength={isRegister ? 128 : undefined}
                 className="h-12 w-full rounded-xl border border-[#9eafab] bg-white px-4 outline-none focus:border-[#193a3d] focus:ring-2 focus:ring-[#8ab5a8]"
               />
               {isRegister && (
-                <p className="mt-2 text-sm text-[#506665]">
+                <p id="password-requirements" className="mt-2 text-sm text-[#506665]">
                   Use at least 8 characters.
                 </p>
               )}
@@ -123,6 +125,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
 
             {state?.message && (
               <p
+                id="auth-error"
                 role="alert"
                 className="rounded-xl border border-[#d6a392] bg-[#fff1eb] px-4 py-3 text-sm text-[#8c3c24]"
               >

@@ -30,7 +30,7 @@ const inputClass = "mt-2 h-11 w-full rounded-xl border border-[#9eafab] bg-white
 function Status({ state }: { state: FlowFormState }) {
   if (!state) return null
 
-  return <p role="status" className={`rounded-xl px-4 py-3 text-sm ${state.success ? "bg-[#e6f2ed] text-[#245b49]" : "bg-[#fff1eb] text-[#8c3c24]"}`}>{state.message}</p>
+  return <p role={state.success ? "status" : "alert"} className={`rounded-xl px-4 py-3 text-sm ${state.success ? "bg-[#e6f2ed] text-[#245b49]" : "bg-[#fff1eb] text-[#8c3c24]"}`}>{state.message}</p>
 }
 
 function CategoryCard({ category, flowArchived, fundingSources }: {

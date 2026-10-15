@@ -11,6 +11,8 @@ import { requirePageSession } from "@/src/server/session"
 import { run, type Operation } from "effection"
 import { left, right } from "fp-ts/Either"
 
+export const metadata = { title: "Funding | AzaPay" }
+
 type FundingPageData = {
   readonly banks: Bank[]
   readonly connections: FundingConnection[]
@@ -34,7 +36,7 @@ export default async function FundingPage() {
 
   if (!config) {
     return (
-      <main className="min-h-svh bg-[#f3f5f1] p-12 text-[#172d31]">
+      <main id="main-content" tabIndex={-1} className="min-h-svh bg-[#f3f5f1] p-12 text-[#172d31]">
         <h1 className="text-3xl font-semibold">Funding unavailable</h1>
         <p className="mt-3">Please try again in a moment.</p>
       </main>
@@ -51,7 +53,7 @@ export default async function FundingPage() {
   })
 
   return (
-    <main className="min-h-svh bg-[#f3f5f1] px-6 py-10 text-[#172d31]">
+    <main id="main-content" tabIndex={-1} className="min-h-svh bg-[#f3f5f1] px-6 py-10 text-[#172d31]">
       <div className="mx-auto max-w-5xl">
         <Link
           href="/"

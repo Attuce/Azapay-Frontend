@@ -92,6 +92,13 @@ dashboard operations only load data for the account summary. The Flow module
 owns Flow categories, payment and savings instructions, and their API-backed
 run previews and history. Each module owns its operations, contract-facing types,
 mapping from API responses, and tests.
+The `aza` module owns Aza lifecycle, invitations, contribution instructions, and
+withdrawal quotes and status. Next.js pages and actions adapt customer input to
+those operations; the API remains authoritative for balances, closure rules,
+withdrawal charges, maturity, and settlement.
+The `settings` module also owns API-backed consent state, consent acceptance,
+and account deactivation. Deactivation clears the local session only after the
+API confirms the request and revokes all sessions.
 Shared code should be limited to cross-cutting capabilities such as money
 formatting, dates, session, and transport.
 

@@ -24,6 +24,8 @@ import { createAuthenticatedServerHttp } from "@/src/server/http"
 import { requirePageSession } from "@/src/server/session"
 import Link from "next/link"
 
+export const metadata = { title: "Account | AzaPay" }
+
 type DashboardData = {
   readonly user: User
   readonly overview: Overview
@@ -66,7 +68,7 @@ export default async function HomePage() {
 
   if (!config) {
     return (
-      <main className="min-h-svh bg-[#f3f5f1] p-12 text-[#172d31]">
+      <main id="main-content" tabIndex={-1} className="min-h-svh bg-[#f3f5f1] p-12 text-[#172d31]">
         <h1 className="text-3xl font-semibold">Account unavailable</h1>
         <p className="mt-3">Please try again later.</p>
       </main>
@@ -91,14 +93,20 @@ export default async function HomePage() {
   }
 
   return (
-    <main className="min-h-svh bg-[#f3f5f1] text-[#172d31]">
+    <main id="main-content" tabIndex={-1} className="min-h-svh bg-[#f3f5f1] text-[#172d31]">
       <header className="border-b border-[#cbd6d3] bg-white px-6 py-5">
-        <div className="mx-auto flex max-w-5xl items-center justify-between">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4">
           <span className="text-xl font-bold tracking-tight">
             aza<span className="text-[#ce6944]">pay</span>
           </span>
-          <form action={logoutAction}>
-            <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center justify-end gap-3">
+            <nav aria-label="Account navigation" className="flex flex-wrap items-center gap-3">
+              <Link
+                className="text-sm font-semibold hover:underline"
+                href="/azas"
+              >
+                Azas
+              </Link>
               <Link
                 className="text-sm font-semibold hover:underline"
                 href="/flow"
@@ -117,11 +125,13 @@ export default async function HomePage() {
               >
                 Settings
               </Link>
+            </nav>
+            <form action={logoutAction}>
               <button className="rounded-full border border-[#819491] px-4 py-2 text-sm font-medium hover:bg-[#eff4f2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#172d31]">
                 Sign out
               </button>
-            </div>
-          </form>
+            </form>
+          </div>
         </div>
       </header>
 

@@ -18,7 +18,7 @@ function Status({ state }: { state: FundingFormState }) {
 
   return (
     <p
-      role="status"
+      role={state.success ? "status" : "alert"}
       className={`rounded-xl px-4 py-3 text-sm ${state.success ? "bg-[#e6f2ed] text-[#245b49]" : "bg-[#fff1eb] text-[#8c3c24]"}`}
     >
       {state.message}
@@ -42,7 +42,10 @@ function FundingConnectionCard({ connection }: { connection: FundingConnection }
         <div>
           <p className="font-semibold">{connection.bank_name ?? "Bank account"}</p>
           <p className="mt-1 text-sm text-[#506665]">
-            {connection.account_name ?? "Customer account"} ·••• {connection.account_number_last4 ?? "0000"}
+            {connection.account_name ?? "Customer account"}
+            {connection.account_number_last4
+              ? ` ·••• ${connection.account_number_last4}`
+              : ""}
           </p>
         </div>
         <span className="rounded-full bg-[#eff4f2] px-3 py-1 text-xs font-semibold capitalize text-[#162c3a]">
@@ -160,7 +163,8 @@ export function FundingJourney({
           </button>
         </form>
 
-        {startState?.bankLinkId ? (
+        {startState?.bankLinkId &&
+        startState.bankLinkStatus === "otp_required" ? (
           <form
             action={otpAction}
             className="space-y-5 rounded-2xl border border-[#cbd6d3] bg-white p-6"
@@ -170,6 +174,15 @@ export function FundingJourney({
               <p className="mt-1 text-sm text-[#506665]">
                 Enter the OTP sent by your bank to finish verification.
               </p>
+              {(startState.resolvedAccountName ||
+                startState.accountNumberLast4) && (
+                <p className="mt-2 text-sm font-medium text-[#193a3d]">
+                  {startState.resolvedAccountName
+                    ? `${startState.resolvedAccountName} · `
+                    : ""}
+                  Account ending in {startState.accountNumberLast4}
+                </p>
+              )}
             </div>
 
             <input

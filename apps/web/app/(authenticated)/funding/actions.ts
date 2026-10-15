@@ -25,6 +25,9 @@ export type FundingFormState =
       readonly message: string
       readonly success: boolean
       readonly bankLinkId?: string
+      readonly bankLinkStatus?: "otp_required"
+      readonly resolvedAccountName?: string
+      readonly accountNumberLast4?: string
       readonly fundingConnectionId?: string
     }
   | null
@@ -99,13 +102,32 @@ export async function startBankLinkAction(
     }
   }
 
-  revalidatePath("/funding")
+  const bankLink = result.outcome.right
+
+  if (bankLink.status === "succeeded" && bankLink.funding_connection_id) {
+    revalidatePath("/funding")
+    return {
+      message: "Bank account verified and connected.",
+      success: true,
+      fundingConnectionId: bankLink.funding_connection_id,
+    }
+  }
+
+  if (bankLink.status !== "otp_required") {
+    return {
+      message: "The bank could not complete verification. Try again later.",
+      success: false,
+    }
+  }
 
   return {
     message:
       "Bank verification started. Enter the OTP from your bank to finish connecting this account.",
     success: true,
-    bankLinkId: result.outcome.right.id,
+    bankLinkId: bankLink.id,
+    bankLinkStatus: "otp_required",
+    resolvedAccountName: bankLink.resolved_account_name ?? undefined,
+    accountNumberLast4: bankLink.account_number_last4,
   }
 }
 
@@ -154,15 +176,24 @@ export async function completeBankLinkAction(
     }
   }
 
-  revalidatePath("/funding")
+  if (
+    outcome.right.status !== "succeeded" ||
+    !outcome.right.funding_connection_id
+  ) {
+    return {
+      message:
+        outcome.right.status === "otp_required"
+          ? "That OTP did not complete verification. Check the code and try again."
+          : "The bank could not complete verification. Try again later.",
+      success: false,
+    }
+  }
 
+  revalidatePath("/funding")
   return {
-    message:
-      outcome.right.funding_connection_id
-        ? "Bank account verified and connected."
-        : `Bank verification is ${outcome.right.status}.`,
+    message: "Bank account verified and connected.",
     success: true,
-    fundingConnectionId: outcome.right.funding_connection_id ?? undefined,
+    fundingConnectionId: outcome.right.funding_connection_id,
   }
 }
 

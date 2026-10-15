@@ -8,10 +8,66 @@ import {
   profileUpdateSchema,
   settingsSchema,
   settingsUpdateSchema,
+  consentInputSchema,
+  consentSchema,
   type ProfileUpdate,
+  type ConsentInput,
+  type Consent,
   type Settings,
   type SettingsUpdate,
 } from "./schemas"
+
+/** Read published consent requirements and the customer's current grants. */
+export function* getConsents(): Operation<Outcome<Consent>> {
+  const http = yield* HttpContext.expect()
+  const signal = yield* useAbortSignal()
+  try {
+    const response = yield* until(http("/v1/users/me/consent", { signal }))
+    if (!response.ok) return left({ kind: "transport", operation: "get-consents" })
+    if (!response.value.ok) return left({ kind: "http-status", operation: "get-consents", status: response.value.status })
+    const decoded = yield* until(json(response.value))
+    const validated = yield* until(validate(decoded, consentSchema))
+    return validated.ok ? right(validated.value) : left({ kind: "invalid-response", operation: "get-consents" })
+  } catch {
+    return left({ kind: "transport", operation: "get-consents" })
+  }
+}
+
+/** Record acceptance for a consent scope and version published by the API. */
+export function* recordConsent(input: ConsentInput): Operation<Outcome<Consent>> {
+  const request = consentInputSchema.safeParse(input)
+  if (!request.success) return left({ kind: "invalid-request", operation: "record-consent" })
+  const http = yield* HttpContext.expect()
+  const signal = yield* useAbortSignal()
+  try {
+    const response = yield* until(http("/v1/users/me/consent", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify(request.data), signal,
+    }))
+    if (!response.ok) return left({ kind: "transport", operation: "record-consent" })
+    if (!response.value.ok) return left({ kind: "http-status", operation: "record-consent", status: response.value.status })
+    const decoded = yield* until(json(response.value))
+    const validated = yield* until(validate(decoded, consentSchema))
+    return validated.ok ? right(validated.value) : left({ kind: "invalid-response", operation: "record-consent" })
+  } catch {
+    return left({ kind: "transport", operation: "record-consent" })
+  }
+}
+
+/** Deactivate this account; the API revokes every session. This write is not replayed. */
+export function* deactivateAccount(): Operation<Outcome<void>> {
+  const http = yield* HttpContext.expect()
+  const signal = yield* useAbortSignal()
+  try {
+    const response = yield* until(http("/v1/users/me/deactivate", { method: "POST", signal }))
+    if (!response.ok) return left({ kind: "transport", operation: "deactivate-account" })
+    if (!response.value.ok) return left({ kind: "http-status", operation: "deactivate-account", status: response.value.status })
+    if (response.value.status !== 204) return left({ kind: "invalid-response", operation: "deactivate-account" })
+    return right(undefined)
+  } catch {
+    return left({ kind: "transport", operation: "deactivate-account" })
+  }
+}
 
 /** Read the customer's editable profile through the authenticated Jamx handler. */
 export function* getProfile(): Operation<Outcome<User>> {
