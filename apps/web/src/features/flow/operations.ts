@@ -28,21 +28,31 @@ import {
 /** Update the customer's Flow name, description, or account-level status. */
 export function* updateFlow(input: FlowUpdate): Operation<Outcome<Flow>> {
   const request = flowUpdateSchema.safeParse(input)
-  if (!request.success) return left({ kind: "invalid-request", operation: "update-flow" })
+  if (!request.success)
+    {return left({ kind: "invalid-request", operation: "update-flow" })}
   const http = yield* HttpContext.expect()
   const signal = yield* useAbortSignal()
   try {
-    const response = yield* until(http("/v1/flows/me", {
-      method: "PATCH",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(request.data),
-      signal,
-    }))
-    if (!response.ok) return left({ kind: "transport", operation: "update-flow" })
-    if (!response.value.ok) return left({ kind: "http-status", operation: "update-flow", status: response.value.status })
+    const response = yield* until(
+      http("/v1/flows/me", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(request.data),
+        signal,
+      })
+    )
+    if (!response.ok)
+      {return left({ kind: "transport", operation: "update-flow" })}
+    if (!response.value.ok)
+      {return left({
+        kind: "http-status",
+        operation: "update-flow",
+        status: response.value.status,
+      })}
     const decoded = yield* until(json(response.value))
     const validated = yield* until(validate(decoded, flowSchema))
-    if (!validated.ok) return left({ kind: "invalid-response", operation: "update-flow" })
+    if (!validated.ok)
+      {return left({ kind: "invalid-response", operation: "update-flow" })}
     return right(validated.value)
   } catch {
     return left({ kind: "transport", operation: "update-flow" })
@@ -57,11 +67,16 @@ export function* getFlow(): Operation<Outcome<Flow>> {
     const response = yield* until(http("/v1/flows/me", { signal }))
     if (!response.ok) return left({ kind: "transport", operation: "get-flow" })
     if (!response.value.ok) {
-      return left({ kind: "http-status", operation: "get-flow", status: response.value.status })
+      return left({
+        kind: "http-status",
+        operation: "get-flow",
+        status: response.value.status,
+      })
     }
     const decoded = yield* until(json(response.value))
     const validated = yield* until(validate(decoded, flowSchema))
-    if (!validated.ok) return left({ kind: "invalid-response", operation: "get-flow" })
+    if (!validated.ok)
+      {return left({ kind: "invalid-response", operation: "get-flow" })}
     return right(validated.value)
   } catch {
     return left({ kind: "transport", operation: "get-flow" })
@@ -74,22 +89,34 @@ export function* connectFlow(
   fundingConnectionId: string | null
 ): Operation<Outcome<Flow>> {
   const id = flowIdSchema.safeParse(flowId)
-  const request = flowConnectSchema.safeParse({ funding_connection_id: fundingConnectionId })
-  if (!id.success || !request.success) return left({ kind: "invalid-request", operation: "connect-flow" })
+  const request = flowConnectSchema.safeParse({
+    funding_connection_id: fundingConnectionId,
+  })
+  if (!id.success || !request.success)
+    {return left({ kind: "invalid-request", operation: "connect-flow" })}
   const http = yield* HttpContext.expect()
   const signal = yield* useAbortSignal()
   try {
-    const response = yield* until(http(`/v1/flows/${id.data}/connect`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(request.data),
-      signal,
-    }))
-    if (!response.ok) return left({ kind: "transport", operation: "connect-flow" })
-    if (!response.value.ok) return left({ kind: "http-status", operation: "connect-flow", status: response.value.status })
+    const response = yield* until(
+      http(`/v1/flows/${id.data}/connect`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(request.data),
+        signal,
+      })
+    )
+    if (!response.ok)
+      {return left({ kind: "transport", operation: "connect-flow" })}
+    if (!response.value.ok)
+      {return left({
+        kind: "http-status",
+        operation: "connect-flow",
+        status: response.value.status,
+      })}
     const decoded = yield* until(json(response.value))
     const validated = yield* until(validate(decoded, flowSchema))
-    if (!validated.ok) return left({ kind: "invalid-response", operation: "connect-flow" })
+    if (!validated.ok)
+      {return left({ kind: "invalid-response", operation: "connect-flow" })}
     return right(validated.value)
   } catch {
     return left({ kind: "transport", operation: "connect-flow" })
@@ -102,22 +129,37 @@ export function* connectFlowCategory(
   fundingConnectionId: string | null
 ): Operation<Outcome<Category>> {
   const id = categoryIdSchema.safeParse(categoryId)
-  const request = categoryConnectSchema.safeParse({ funding_connection_id: fundingConnectionId })
-  if (!id.success || !request.success) return left({ kind: "invalid-request", operation: "connect-flow-category" })
+  const request = categoryConnectSchema.safeParse({
+    funding_connection_id: fundingConnectionId,
+  })
+  if (!id.success || !request.success)
+    {return left({ kind: "invalid-request", operation: "connect-flow-category" })}
   const http = yield* HttpContext.expect()
   const signal = yield* useAbortSignal()
   try {
-    const response = yield* until(http(`/v1/categories/${id.data}/connect`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(request.data),
-      signal,
-    }))
-    if (!response.ok) return left({ kind: "transport", operation: "connect-flow-category" })
-    if (!response.value.ok) return left({ kind: "http-status", operation: "connect-flow-category", status: response.value.status })
+    const response = yield* until(
+      http(`/v1/categories/${id.data}/connect`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(request.data),
+        signal,
+      })
+    )
+    if (!response.ok)
+      {return left({ kind: "transport", operation: "connect-flow-category" })}
+    if (!response.value.ok)
+      {return left({
+        kind: "http-status",
+        operation: "connect-flow-category",
+        status: response.value.status,
+      })}
     const decoded = yield* until(json(response.value))
     const validated = yield* until(validate(decoded, categorySchema))
-    if (!validated.ok) return left({ kind: "invalid-response", operation: "connect-flow-category" })
+    if (!validated.ok)
+      {return left({
+        kind: "invalid-response",
+        operation: "connect-flow-category",
+      })}
     return right(validated.value)
   } catch {
     return left({ kind: "transport", operation: "connect-flow-category" })
@@ -125,18 +167,32 @@ export function* connectFlowCategory(
 }
 
 /** Read the API's upcoming Flow runs, readiness gates, and funding state. */
-export function* getFlowUpcoming(flowId: string): Operation<Outcome<FlowUpcoming[]>> {
+export function* getFlowUpcoming(
+  flowId: string
+): Operation<Outcome<FlowUpcoming[]>> {
   const id = flowIdSchema.safeParse(flowId)
-  if (!id.success) return left({ kind: "invalid-request", operation: "get-flow-upcoming" })
+  if (!id.success)
+    {return left({ kind: "invalid-request", operation: "get-flow-upcoming" })}
   const http = yield* HttpContext.expect()
   const signal = yield* useAbortSignal()
   try {
-    const response = yield* until(http(`/v1/flows/${id.data}/upcoming`, { signal }))
-    if (!response.ok) return left({ kind: "transport", operation: "get-flow-upcoming" })
-    if (!response.value.ok) return left({ kind: "http-status", operation: "get-flow-upcoming", status: response.value.status })
+    const response = yield* until(
+      http(`/v1/flows/${id.data}/upcoming`, { signal })
+    )
+    if (!response.ok)
+      {return left({ kind: "transport", operation: "get-flow-upcoming" })}
+    if (!response.value.ok)
+      {return left({
+        kind: "http-status",
+        operation: "get-flow-upcoming",
+        status: response.value.status,
+      })}
     const decoded = yield* until(json(response.value))
-    const validated = yield* until(validate(decoded, flowUpcomingSchema.array()))
-    if (!validated.ok) return left({ kind: "invalid-response", operation: "get-flow-upcoming" })
+    const validated = yield* until(
+      validate(decoded, flowUpcomingSchema.array())
+    )
+    if (!validated.ok)
+      {return left({ kind: "invalid-response", operation: "get-flow-upcoming" })}
     return right(validated.value)
   } catch {
     return left({ kind: "transport", operation: "get-flow-upcoming" })
@@ -144,18 +200,30 @@ export function* getFlowUpcoming(flowId: string): Operation<Outcome<FlowUpcoming
 }
 
 /** Read backend-owned amounts, fees, destinations, outcomes, and recovery history for a Flow. */
-export function* getFlowHistory(flowId: string): Operation<Outcome<FlowHistory[]>> {
+export function* getFlowHistory(
+  flowId: string
+): Operation<Outcome<FlowHistory[]>> {
   const id = flowIdSchema.safeParse(flowId)
-  if (!id.success) return left({ kind: "invalid-request", operation: "get-flow-history" })
+  if (!id.success)
+    {return left({ kind: "invalid-request", operation: "get-flow-history" })}
   const http = yield* HttpContext.expect()
   const signal = yield* useAbortSignal()
   try {
-    const response = yield* until(http(`/v1/flows/${id.data}/history`, { signal }))
-    if (!response.ok) return left({ kind: "transport", operation: "get-flow-history" })
-    if (!response.value.ok) return left({ kind: "http-status", operation: "get-flow-history", status: response.value.status })
+    const response = yield* until(
+      http(`/v1/flows/${id.data}/history`, { signal })
+    )
+    if (!response.ok)
+      {return left({ kind: "transport", operation: "get-flow-history" })}
+    if (!response.value.ok)
+      {return left({
+        kind: "http-status",
+        operation: "get-flow-history",
+        status: response.value.status,
+      })}
     const decoded = yield* until(json(response.value))
     const validated = yield* until(validate(decoded, flowHistorySchema.array()))
-    if (!validated.ok) return left({ kind: "invalid-response", operation: "get-flow-history" })
+    if (!validated.ok)
+      {return left({ kind: "invalid-response", operation: "get-flow-history" })}
     return right(validated.value)
   } catch {
     return left({ kind: "transport", operation: "get-flow-history" })
@@ -163,23 +231,44 @@ export function* getFlowHistory(flowId: string): Operation<Outcome<FlowHistory[]
 }
 
 /** Create a Flow spending or saving instruction through the category contract. */
-export function* createFlowCategory(input: FlowCategoryCreate): Operation<Outcome<Category>> {
+export function* createFlowCategory(
+  input: FlowCategoryCreate
+): Operation<Outcome<Category>> {
   const request = flowCategoryCreateSchema.safeParse(input)
-  if (!request.success) return left({ kind: "invalid-request", operation: "create-flow-category" })
+  if (!request.success)
+    {return left({ kind: "invalid-request", operation: "create-flow-category" })}
   const http = yield* HttpContext.expect()
   const signal = yield* useAbortSignal()
   try {
-    const response = yield* until(http("/v1/categories", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(request.data),
-      signal,
-    }))
-    if (!response.ok) return left({ kind: "transport", operation: "create-flow-category" })
-    if (!response.value.ok) return left({ kind: "http-status", operation: "create-flow-category", status: response.value.status })
+    const response = yield* until(
+      http("/v1/categories", {
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(request.data),
+        method: "POST",
+        signal,
+      })
+    )
+
+    if (!response.ok)
+      {return left({ kind: "transport", operation: "create-flow-category" })}
+
+    if (!response.value.ok) {
+      return left({
+        kind: "http-status",
+        status: response.value.status,
+        operation: "create-flow-category",
+      })
+    }
+
     const decoded = yield* until(json(response.value))
     const validated = yield* until(validate(decoded, categorySchema))
-    if (!validated.ok) return left({ kind: "invalid-response", operation: "create-flow-category" })
+
+    if (!validated.ok)
+      {return left({
+        kind: "invalid-response",
+        operation: "create-flow-category",
+      })}
+
     return right(validated.value)
   } catch {
     return left({ kind: "transport", operation: "create-flow-category" })
@@ -187,24 +276,40 @@ export function* createFlowCategory(input: FlowCategoryCreate): Operation<Outcom
 }
 
 /** Update the future schedule or status of a Flow instruction. */
-export function* updateFlowCategory(categoryId: string, input: FlowCategoryUpdate): Operation<Outcome<Category>> {
+export function* updateFlowCategory(
+  categoryId: string,
+  input: FlowCategoryUpdate
+): Operation<Outcome<Category>> {
   const id = categoryIdSchema.safeParse(categoryId)
   const request = flowCategoryUpdateSchema.safeParse(input)
-  if (!id.success || !request.success) return left({ kind: "invalid-request", operation: "update-flow-category" })
+  if (!id.success || !request.success)
+    {return left({ kind: "invalid-request", operation: "update-flow-category" })}
   const http = yield* HttpContext.expect()
   const signal = yield* useAbortSignal()
   try {
-    const response = yield* until(http(`/v1/categories/${id.data}`, {
-      method: "PATCH",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(request.data),
-      signal,
-    }))
-    if (!response.ok) return left({ kind: "transport", operation: "update-flow-category" })
-    if (!response.value.ok) return left({ kind: "http-status", operation: "update-flow-category", status: response.value.status })
+    const response = yield* until(
+      http(`/v1/categories/${id.data}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(request.data),
+        signal,
+      })
+    )
+    if (!response.ok)
+      {return left({ kind: "transport", operation: "update-flow-category" })}
+    if (!response.value.ok)
+      {return left({
+        kind: "http-status",
+        operation: "update-flow-category",
+        status: response.value.status,
+      })}
     const decoded = yield* until(json(response.value))
     const validated = yield* until(validate(decoded, categorySchema))
-    if (!validated.ok) return left({ kind: "invalid-response", operation: "update-flow-category" })
+    if (!validated.ok)
+      {return left({
+        kind: "invalid-response",
+        operation: "update-flow-category",
+      })}
     return right(validated.value)
   } catch {
     return left({ kind: "transport", operation: "update-flow-category" })
@@ -212,24 +317,46 @@ export function* updateFlowCategory(categoryId: string, input: FlowCategoryUpdat
 }
 
 /** Change only an instruction's amount using the backend's dedicated endpoint. */
-export function* updateFlowCategoryAmount(categoryId: string, amount: string): Operation<Outcome<Category>> {
+export function* updateFlowCategoryAmount(
+  categoryId: string,
+  amount: string
+): Operation<Outcome<Category>> {
   const id = categoryIdSchema.safeParse(categoryId)
   const request = flowCategoryAmountSchema.safeParse({ amount_per_run: amount })
-  if (!id.success || !request.success) return left({ kind: "invalid-request", operation: "update-flow-category-amount" })
+  if (!id.success || !request.success)
+    {return left({
+      kind: "invalid-request",
+      operation: "update-flow-category-amount",
+    })}
   const http = yield* HttpContext.expect()
   const signal = yield* useAbortSignal()
   try {
-    const response = yield* until(http(`/v1/categories/${id.data}/amount`, {
-      method: "PATCH",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(request.data),
-      signal,
-    }))
-    if (!response.ok) return left({ kind: "transport", operation: "update-flow-category-amount" })
-    if (!response.value.ok) return left({ kind: "http-status", operation: "update-flow-category-amount", status: response.value.status })
+    const response = yield* until(
+      http(`/v1/categories/${id.data}/amount`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(request.data),
+        signal,
+      })
+    )
+    if (!response.ok)
+      {return left({
+        kind: "transport",
+        operation: "update-flow-category-amount",
+      })}
+    if (!response.value.ok)
+      {return left({
+        kind: "http-status",
+        operation: "update-flow-category-amount",
+        status: response.value.status,
+      })}
     const decoded = yield* until(json(response.value))
     const validated = yield* until(validate(decoded, categorySchema))
-    if (!validated.ok) return left({ kind: "invalid-response", operation: "update-flow-category-amount" })
+    if (!validated.ok)
+      {return left({
+        kind: "invalid-response",
+        operation: "update-flow-category-amount",
+      })}
     return right(validated.value)
   } catch {
     return left({ kind: "transport", operation: "update-flow-category-amount" })
@@ -237,18 +364,33 @@ export function* updateFlowCategoryAmount(categoryId: string, amount: string): O
 }
 
 /** Archive a Flow instruction using the API's soft-delete operation. */
-export function* archiveFlowCategory(categoryId: string): Operation<Outcome<Category>> {
+export function* archiveFlowCategory(
+  categoryId: string
+): Operation<Outcome<Category>> {
   const id = categoryIdSchema.safeParse(categoryId)
-  if (!id.success) return left({ kind: "invalid-request", operation: "archive-flow-category" })
+  if (!id.success)
+    {return left({ kind: "invalid-request", operation: "archive-flow-category" })}
   const http = yield* HttpContext.expect()
   const signal = yield* useAbortSignal()
   try {
-    const response = yield* until(http(`/v1/categories/${id.data}`, { method: "DELETE", signal }))
-    if (!response.ok) return left({ kind: "transport", operation: "archive-flow-category" })
-    if (!response.value.ok) return left({ kind: "http-status", operation: "archive-flow-category", status: response.value.status })
+    const response = yield* until(
+      http(`/v1/categories/${id.data}`, { method: "DELETE", signal })
+    )
+    if (!response.ok)
+      {return left({ kind: "transport", operation: "archive-flow-category" })}
+    if (!response.value.ok)
+      {return left({
+        kind: "http-status",
+        operation: "archive-flow-category",
+        status: response.value.status,
+      })}
     const decoded = yield* until(json(response.value))
     const validated = yield* until(validate(decoded, categorySchema))
-    if (!validated.ok) return left({ kind: "invalid-response", operation: "archive-flow-category" })
+    if (!validated.ok)
+      {return left({
+        kind: "invalid-response",
+        operation: "archive-flow-category",
+      })}
     return right(validated.value)
   } catch {
     return left({ kind: "transport", operation: "archive-flow-category" })

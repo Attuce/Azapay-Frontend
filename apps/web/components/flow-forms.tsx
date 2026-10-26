@@ -1,6 +1,6 @@
 "use client"
 
-import { useActionState } from "react"
+import { useActionState, useEffect, useRef, useState } from "react"
 import type { Outcome } from "@/src/application/errors"
 import {
   archiveFlowCategoryAction,
@@ -281,11 +281,121 @@ function FlowChildInstructions({
   banks: Outcome<FlowBank[]>
   archived: boolean
 }) {
-  const [payState, payAction, payPending] = useActionState(createFlowPayAction, null)
   const [saveState, saveAction, savePending] = useActionState(createFlowSaveAction, null)
   const activeCategories = categories.filter((category) => category.status === "active")
   const availableAzas = azas._tag === "Right" ? azas.right.filter((aza) => aza.status === "open" || aza.status === "active") : []
   const azaNames = new Map((azas._tag === "Right" ? azas.right : []).map((aza) => [aza.id, aza.name]))
+  const [payOpen, setPayOpen] = useState(false)
+  const payDialogRef = useRef<HTMLElement>(null)
+  const [payStep, setPayStep] = useState(0)
+  const [payError, setPayError] = useState<string | null>(null)
+  const [payFields, setPayFields] = useState({
+    category_id: "",
+    beneficiary_name: "",
+    amount: "",
+    destination_type: "bank" as "bank" | "aza" | "shared_aza",
+    bank_code: "",
+    account_number: "",
+    aza_id: "",
+    frequency: "monthly",
+    day_of_week: "",
+    day_of_month: "",
+    funding_connection_id: "",
+    memo: "",
+  })
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      if (window.location.hash === "#add-pay") setPayOpen(true)
+    }, 0)
+    return () => window.clearTimeout(timeout)
+  }, [])
+
+  useEffect(() => {
+    if (!payOpen) return
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    const focusable = () => [...(payDialogRef.current?.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([type="hidden"]), select') ?? [])]
+    payDialogRef.current?.querySelector<HTMLElement>('input:not([type="hidden"]), select')?.focus()
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setPayOpen(false)
+        setPayError(null)
+        return
+      }
+      if (event.key !== "Tab") return
+      const items = focusable()
+      const first = items[0]
+      const last = items.at(-1)
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last?.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first?.focus()
+      }
+    }
+    window.addEventListener("keydown", closeOnEscape)
+    return () => {
+      window.removeEventListener("keydown", closeOnEscape)
+      previousFocus?.focus()
+    }
+  }, [payOpen])
+
+  const [payState, payAction, payPending] = useActionState(async (previousState: FlowFormState, formData: FormData) => {
+    const result = await createFlowPayAction(previousState, formData)
+    if (result?.success) {
+      setPayOpen(false)
+      setPayStep(0)
+      setPayFields({
+        category_id: "",
+        beneficiary_name: "",
+        amount: "",
+        destination_type: "bank",
+        bank_code: "",
+        account_number: "",
+        aza_id: "",
+        frequency: "monthly",
+        day_of_week: "",
+        day_of_month: "",
+        funding_connection_id: "",
+        memo: "",
+      })
+    }
+    return result
+  }, null)
+
+  const setPayValue = (field: keyof typeof payFields, value: string) => {
+    setPayFields((current) => ({ ...current, [field]: value }))
+    setPayError(null)
+  }
+
+  const advancePay = () => {
+    if (payStep === 0) {
+      if (!payFields.category_id || !payFields.beneficiary_name.trim() || !/^(?=.*[1-9])\d{1,16}\.\d{2}$/.test(payFields.amount)) {
+        setPayError("Add a payee, choose its Flow category, and enter a non-zero amount with two decimal places.")
+        return
+      }
+    }
+    if (payStep === 1) {
+      const validBank = payFields.bank_code && /^\d{10}$/.test(payFields.account_number)
+      const validAza = payFields.aza_id
+      if (payFields.destination_type === "bank" ? !validBank : !validAza) {
+        setPayError(payFields.destination_type === "bank" ? "Choose a bank and enter its 10-digit account number." : "Choose an Aza destination.")
+        return
+      }
+    }
+    setPayError(null)
+    setPayStep((current) => Math.min(current + 1, 3))
+  }
+
+  const selectedCategory = activeCategories.find((category) => category.id === payFields.category_id)
+  const selectedBank = banks._tag === "Right" ? banks.right.find((bank) => bank.code === payFields.bank_code) : undefined
+  const selectedAza = availableAzas.find((aza) => aza.id === payFields.aza_id)
+
+  const closePayWizard = () => {
+    setPayOpen(false)
+    setPayError(null)
+  }
 
   return (
     <section className="space-y-4">
@@ -296,47 +406,87 @@ function FlowChildInstructions({
 
       {!archived && activeCategories.length > 0 ? (
         <div className="grid gap-4 xl:grid-cols-2">
-          <form action={payAction} className="grid gap-4 rounded-2xl border border-[#cbd6d3] bg-white p-5">
-            <h3 className="font-semibold">Add a payment</h3>
-            <label className="text-sm font-medium">Flow category
-              <select className={inputClass} name="category_id" required><option value="">Choose category</option>{activeCategories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select>
-            </label>
-            <label className="text-sm font-medium">Payee name
-              <input className={inputClass} name="beneficiary_name" maxLength={200} required />
-            </label>
-            <label className="text-sm font-medium">Amount per run (₦)
-              <input className={inputClass} name="amount" inputMode="decimal" pattern="[0-9]+\.[0-9]{2}" placeholder="2500.00" required />
-            </label>
-            <label className="text-sm font-medium">Destination type
-              <select className={inputClass} name="destination_type" defaultValue="bank"><option value="bank">Bank account</option><option value="aza">Aza</option><option value="shared_aza">Shared Aza</option></select>
-            </label>
-            <label className="text-sm font-medium">Bank (for bank payments)
-              <select className={inputClass} name="bank_code" defaultValue=""><option value="">Choose a bank</option>{banks._tag === "Right" ? banks.right.map((bank) => <option key={bank.code} value={bank.code}>{bank.name}</option>) : null}</select>
-            </label>
-            <label className="text-sm font-medium">Bank account number (10 digits)
-              <input className={inputClass} name="account_number" inputMode="numeric" pattern="[0-9]{10}" maxLength={10} />
-            </label>
-            <label className="text-sm font-medium">Aza (for Aza payments)
-              <select className={inputClass} name="aza_id" defaultValue=""><option value="">Choose an Aza</option>{availableAzas.map((aza) => <option key={aza.id} value={aza.id}>{aza.name}</option>)}</select>
-            </label>
-            <label className="text-sm font-medium">Frequency
-              <select className={inputClass} name="frequency" defaultValue="monthly"><option value="once">Once</option><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select>
-            </label>
-            <label className="text-sm font-medium">Day of week (optional)
-              <select className={inputClass} name="day_of_week" defaultValue=""><option value="">No day selected</option><option value="0">Sunday</option><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option></select>
-            </label>
-            <label className="text-sm font-medium">Day of month (optional)
-              <input className={inputClass} name="day_of_month" type="number" min={1} max={31} />
-            </label>
-            <label className="text-sm font-medium">Funding source (optional)
-              <select className={inputClass} name="funding_connection_id" defaultValue=""><option value="">Use category or Flow default</option>{fundingSources.filter((source) => source.status === "active").map((source) => <option key={source.id} value={source.id}>{source.bank_name ?? "Funding source"} ·••• {source.account_number_last4 ?? "••••"}</option>)}</select>
-            </label>
-            <label className="text-sm font-medium">Memo (optional)
-              <input className={inputClass} name="memo" maxLength={500} />
-            </label>
-            <button disabled={payPending} className="h-11 rounded-full bg-[#193a3d] px-4 text-sm font-semibold text-white disabled:opacity-60">{payPending ? "Creating…" : "Create payment"}</button>
+          <div id="add-pay" className="azapay-pay-launch scroll-mt-8">
+            <div className="azapay-pay-launch-copy"><h3 className="font-semibold">Payments</h3><p className="mt-1 text-sm text-[#506665]">Set up a payment to a bank account or Aza.</p></div>
+            <button type="button" onClick={() => { setPayError(null); setPayOpen(true) }} className="azapay-add-button mt-4">＋ Add a pay</button>
             <Status state={payState} />
-          </form>
+          </div>
+
+          {payOpen ? (
+            <div className="azapay-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) closePayWizard() }}>
+              <section ref={payDialogRef} className="azapay-modal azapay-pay-wizard" role="dialog" aria-modal="true" aria-labelledby="pay-wizard-title">
+                <div className="azapay-wizard-topline">
+                  <button type="button" aria-label="Go back" disabled={payStep === 0} onClick={() => { setPayError(null); setPayStep((current) => Math.max(current - 1, 0)) }}>←</button>
+                  <span>STEP {payStep + 1} OF 4</span>
+                  <button type="button" aria-label="Close" onClick={closePayWizard}>×</button>
+                </div>
+                <form action={payAction} className="azapay-wizard-form">
+                  <input type="hidden" name="category_id" value={payFields.category_id} />
+                  <input type="hidden" name="beneficiary_name" value={payFields.beneficiary_name} />
+                  <input type="hidden" name="amount" value={payFields.amount} />
+                  <input type="hidden" name="destination_type" value={payFields.destination_type} />
+                  <input type="hidden" name="bank_code" value={payFields.bank_code} />
+                  <input type="hidden" name="bank_name" value={selectedBank?.name ?? ""} />
+                  <input type="hidden" name="account_number" value={payFields.account_number} />
+                  <input type="hidden" name="aza_id" value={payFields.aza_id} />
+                  <input type="hidden" name="frequency" value={payFields.frequency} />
+                  <input type="hidden" name="day_of_week" value={payFields.day_of_week} />
+                  <input type="hidden" name="day_of_month" value={payFields.day_of_month} />
+                  <input type="hidden" name="funding_connection_id" value={payFields.funding_connection_id} />
+                  <input type="hidden" name="memo" value={payFields.memo} />
+
+                  {payStep === 0 ? <>
+                    <h2 id="pay-wizard-title" className="azapay-display-title">Add a pay</h2>
+                    <p className="azapay-muted">Name the payment, choose its Flow category, and set the amount.</p>
+                    <label className="azapay-field-label">PAYEE NAME<input className={inputClass} value={payFields.beneficiary_name} maxLength={200} onChange={(event) => setPayValue("beneficiary_name", event.target.value)} placeholder="e.g. Rent" /></label>
+                    <label className="azapay-field-label">FLOW CATEGORY<select className={inputClass} value={payFields.category_id} onChange={(event) => setPayValue("category_id", event.target.value)}><option value="">Choose a category</option>{activeCategories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label>
+                    <label className="azapay-field-label">AMOUNT PER RUN (₦)<input className={inputClass} inputMode="decimal" value={payFields.amount} onChange={(event) => setPayValue("amount", event.target.value)} placeholder="2500.00" /></label>
+                  </> : null}
+
+                  {payStep === 1 ? <>
+                    <h2 id="pay-wizard-title" className="azapay-display-title">Where should it go?</h2>
+                    <p className="azapay-muted">Send to a bank account or move money into one of your Azas.</p>
+                    <div className="azapay-choice-pills" role="group" aria-label="Destination type">
+                      <button type="button" aria-pressed={payFields.destination_type === "bank"} onClick={() => { setPayValue("destination_type", "bank"); setPayValue("aza_id", "") }}>Bank account</button>
+                      <button type="button" aria-pressed={payFields.destination_type === "aza"} onClick={() => { setPayValue("destination_type", "aza"); setPayValue("bank_code", ""); setPayValue("account_number", "") }}>Aza</button>
+                      <button type="button" aria-pressed={payFields.destination_type === "shared_aza"} onClick={() => { setPayValue("destination_type", "shared_aza"); setPayValue("bank_code", ""); setPayValue("account_number", "") }}>Shared Aza</button>
+                    </div>
+                    {payFields.destination_type === "bank" ? <>
+                      <label className="azapay-field-label">BANK<select className={inputClass} value={payFields.bank_code} onChange={(event) => setPayValue("bank_code", event.target.value)}><option value="">Choose a bank</option>{banks._tag === "Right" ? banks.right.map((bank) => <option key={bank.code} value={bank.code}>{bank.name}</option>) : null}</select></label>
+                      <label className="azapay-field-label">ACCOUNT NUMBER<input className={inputClass} inputMode="numeric" maxLength={10} value={payFields.account_number} onChange={(event) => setPayValue("account_number", event.target.value.replace(/\D/g, "").slice(0, 10))} placeholder="10 digits" /></label>
+                    </> : <label className="azapay-field-label">AZA DESTINATION<select className={inputClass} value={payFields.aza_id} onChange={(event) => setPayValue("aza_id", event.target.value)}><option value="">Choose an Aza</option>{availableAzas.map((aza) => <option key={aza.id} value={aza.id}>{aza.name}</option>)}</select></label>}
+                    <p className="azapay-muted text-sm">The destination can be changed only while the backend reports it as unlocked.</p>
+                  </> : null}
+
+                  {payStep === 2 ? <>
+                    <h2 id="pay-wizard-title" className="azapay-display-title">When should it run?</h2>
+                    <p className="azapay-muted">Choose the schedule for this payment.</p>
+                    <label className="azapay-field-label">FREQUENCY<select className={inputClass} value={payFields.frequency} onChange={(event) => setPayValue("frequency", event.target.value)}><option value="once">Once</option><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select></label>
+                    {payFields.frequency === "weekly" ? <label className="azapay-field-label">DAY OF WEEK<select className={inputClass} value={payFields.day_of_week} onChange={(event) => setPayValue("day_of_week", event.target.value)}><option value="">Choose a day (optional)</option><option value="0">Sunday</option><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option></select></label> : null}
+                    {payFields.frequency === "monthly" ? <label className="azapay-field-label">DAY OF MONTH<input className={inputClass} type="number" min={1} max={31} value={payFields.day_of_month} onChange={(event) => setPayValue("day_of_month", event.target.value)} placeholder="Optional" /></label> : null}
+                    <label className="azapay-field-label">FUNDING SOURCE<select className={inputClass} value={payFields.funding_connection_id} onChange={(event) => setPayValue("funding_connection_id", event.target.value)}><option value="">Use category or Flow default</option>{fundingSources.filter((source) => source.status === "active").map((source) => <option key={source.id} value={source.id}>{source.bank_name ?? "Funding source"} ·••• {source.account_number_last4 ?? "••••"}</option>)}</select></label>
+                    <label className="azapay-field-label">MEMO (OPTIONAL)<input className={inputClass} value={payFields.memo} maxLength={500} onChange={(event) => setPayValue("memo", event.target.value)} /></label>
+                  </> : null}
+
+                  {payStep === 3 ? <>
+                    <h2 id="pay-wizard-title" className="azapay-display-title">Review</h2>
+                    <dl className="azapay-review-list">
+                      <div><dt>Payee</dt><dd>{payFields.beneficiary_name}</dd></div>
+                      <div><dt>Category</dt><dd>{selectedCategory?.name ?? "—"}</dd></div>
+                      <div><dt>Amount</dt><dd>₦{payFields.amount}</dd></div>
+                      <div><dt>Destination</dt><dd>{payFields.destination_type === "bank" ? `${selectedBank?.name ?? "Bank"} ·••• ${payFields.account_number.slice(-4)}` : selectedAza?.name ?? "—"}</dd></div>
+                      <div><dt>Runs</dt><dd>{payFields.frequency}{payFields.day_of_week ? ` · ${["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][Number(payFields.day_of_week)]}` : ""}{payFields.day_of_month ? ` · Day ${payFields.day_of_month}` : ""}</dd></div>
+                    </dl>
+                    <p className="azapay-lock-note">The API determines readiness and whether this payment can be scheduled. Review the payment status after creating it.</p>
+                  </> : null}
+
+                  {payError ? <p className="azapay-form-error" role="alert">{payError}</p> : null}
+                  <Status state={payState} />
+                  {payStep < 3 ? <button type="button" className="azapay-wizard-primary" onClick={advancePay}>Continue</button> : <button type="submit" className="azapay-wizard-primary" disabled={payPending}>{payPending ? "Creating…" : "Create pay"}</button>}
+                </form>
+              </section>
+            </div>
+          ) : null}
 
           <form action={saveAction} className="grid content-start gap-4 rounded-2xl border border-[#cbd6d3] bg-white p-5">
             <h3 className="font-semibold">Add a saving</h3>
@@ -381,7 +531,13 @@ function FlowChildInstructions({
             <Status state={saveState} />
           </form>
         </div>
-        ) : null}
+      ) : !archived ? (
+        <div id="add-pay" className="azapay-pay-launch scroll-mt-8">
+          <h3 className="font-semibold">Create a Flow category first</h3>
+          <p className="mt-1 max-w-xl text-sm text-[#506665]">Every payment belongs to a category. Add one, then return here to set up its payment.</p>
+          <a className="mt-4 inline-flex rounded-full border border-amber-400 px-4 py-2 text-sm font-semibold text-amber-300 hover:bg-amber-300/10" href="#add-instruction">Add a category</a>
+        </div>
+      ) : null}
 
       <div className="space-y-3">
         <h3 className="font-semibold">Payments</h3>
@@ -451,7 +607,7 @@ export function FlowJourney({ flow, categories, fundingSources, upcoming, histor
         </form>
       ) : null}
 
-      {flow.status !== "archived" ? <form action={createAction} className="grid gap-5 rounded-2xl border border-[#cbd6d3] bg-white p-6 md:grid-cols-2">
+      {flow.status !== "archived" ? <form id="add-instruction" action={createAction} className="grid gap-5 rounded-2xl border border-[#cbd6d3] bg-white p-6 md:grid-cols-2">
         <div className="md:col-span-2">
           <h2 className="text-xl font-semibold">Create an instruction</h2>
           <p className="mt-1 text-sm text-[#506665]">Set the amount and schedule. The API determines readiness and execution outcomes.</p>

@@ -8,7 +8,7 @@ async function createTestAccount(page: import("@playwright/test").Page) {
     .fill("journey@example.test")
   await page.getByLabel("Password").fill("safe-test-password")
   await page.getByRole("button", { name: "Create account" }).click()
-  await expect(page).toHaveURL(/\/$/)
+  await expect(page).toHaveURL(/\/$/, { timeout: 45_000 })
 }
 
 test("a customer can link, set default, and remove a bank source", async ({

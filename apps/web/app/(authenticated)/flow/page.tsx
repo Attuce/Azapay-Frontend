@@ -1,4 +1,3 @@
-import Link from "next/link"
 import { connection } from "next/server"
 import { FlowJourney } from "@/components/flow-forms"
 import { AccessTokenContext, HttpContext } from "@/src/application/context"
@@ -101,9 +100,8 @@ export default async function FlowPage() {
   return (
     <main id="main-content" tabIndex={-1} className="min-h-svh bg-[#f3f5f1] px-6 py-10 text-[#172d31]">
       <div className="mx-auto max-w-5xl">
-        <Link href="/" className="text-sm font-semibold text-[#a54d2f] hover:underline">← Account</Link>
-        <h1 className="mt-5 text-4xl font-semibold tracking-tight">Flow instructions</h1>
-        <p className="mt-2 max-w-2xl text-[#506665]">{outcome._tag === "Right" ? outcome.right.flow.description ?? "Manage your spending and saving schedules." : "Manage your spending and saving schedules."}</p>
+        <h1 className="azapay-display-title mt-1">Flow</h1>
+        <p className="mt-2 max-w-2xl text-[#506665]">{outcome._tag === "Right" ? outcome.right.flow.description ?? "Where money comes from, and where some of it stays protected." : "Where money comes from, and where some of it stays protected."}</p>
         {outcome._tag === "Left" ? (
           <section className="mt-8 rounded-2xl border border-[#cbd6d3] bg-white p-8"><h2 className="text-2xl font-semibold">Flow unavailable</h2><p className="mt-2 text-[#506665]">We couldn’t load your instructions. Refresh and try again.</p></section>
         ) : (

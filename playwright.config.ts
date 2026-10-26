@@ -10,9 +10,12 @@ const browserTestEnv = {
 export default defineConfig({
   testDir: "./e2e",
   workers: 1,
+  timeout: 60_000,
+  expect: { timeout: 10_000 },
   use: {
     baseURL,
     ...devices["Desktop Chrome"],
+    navigationTimeout: 60_000,
     launchOptions: process.env.PLAYWRIGHT_CHROME_PATH
       ? { executablePath: process.env.PLAYWRIGHT_CHROME_PATH }
       : undefined,

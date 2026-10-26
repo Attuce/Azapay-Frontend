@@ -3,6 +3,7 @@ import { redirect } from "next/navigation"
 import { connection } from "next/server"
 import { loadServerConfig, ServerConfigContext } from "@/src/server/config"
 import { readPageSession } from "@/src/server/session"
+import { AppShell } from "@/components/app-shell"
 
 /**
  * Gate the authenticated route group while individual pages authorize their
@@ -14,7 +15,7 @@ export default async function AuthenticatedLayout({
   await connection()
   const config = loadServerConfig()
 
-  if (!config) return children
+  if (!config) return <AppShell>{children}</AppShell>
 
   const session = await run(function* () {
     yield* ServerConfigContext.set(config)
@@ -23,5 +24,5 @@ export default async function AuthenticatedLayout({
 
   if (session.kind === "missing") redirect("/login")
 
-  return children
+  return <AppShell>{children}</AppShell>
 }

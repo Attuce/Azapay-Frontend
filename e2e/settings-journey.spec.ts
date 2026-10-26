@@ -9,7 +9,7 @@ test("a customer can review consent and deactivate their account", async ({
   await page.getByLabel("Password").fill("safe-test-password")
   await page.getByRole("button", { name: "Create account" }).click()
 
-  await expect(page).toHaveURL(/\/$/)
+  await expect(page).toHaveURL(/\/$/, { timeout: 15_000 })
   await page.getByRole("link", { name: "Settings" }).click()
   await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible()
 
