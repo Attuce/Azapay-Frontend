@@ -10,6 +10,7 @@ import type { Consent, Settings } from "@/src/features/settings/schemas"
 import { loadServerConfig, ServerConfigContext } from "@/src/server/config"
 import { createAuthenticatedServerHttp } from "@/src/server/http"
 import { requirePageSession } from "@/src/server/session"
+import { ArrowLeft } from "lucide-react"
 import { AccountClosureForm, ConsentManager, PreferencesForm, ProfileForm } from "@/components/settings-forms"
 
 export const metadata = { title: "Settings | AzaPay" }
@@ -37,7 +38,7 @@ export default async function SettingsPage() {
   const config = loadServerConfig()
 
   if (!config) {
-    return <main id="main-content" tabIndex={-1} className="p-12"><h1 className="text-3xl font-semibold">Settings unavailable</h1><p className="mt-3">Settings are temporarily unavailable.</p></main>
+    return <main id="main-content" tabIndex={-1} className="azapay-page p-8"><h1 className="azapay-display-title">Settings unavailable</h1><p className="mt-3">Settings are temporarily unavailable.</p></main>
   }
 
   const outcome = await run(function* () {
@@ -51,24 +52,24 @@ export default async function SettingsPage() {
 
   if (outcome._tag === "Left") {
     return (
-      <main id="main-content" tabIndex={-1} className="p-12">
-        <h1 className="text-3xl font-semibold">Settings unavailable</h1>
+      <main id="main-content" tabIndex={-1} className="azapay-page p-8">
+        <h1 className="azapay-display-title">Settings unavailable</h1>
         <p className="mt-3">We couldn’t load your settings. Try again later.</p>
       </main>
     )
   }
 
   return (
-    <main id="main-content" tabIndex={-1} className="min-h-svh bg-[#f3f5f1] px-6 py-10 text-[#172d31]">
-      <div className="mx-auto max-w-4xl">
+    <main id="main-content" tabIndex={-1} className="azapay-page">
+      <div className="azapay-page-inner">
         <Link
           href="/"
-          className="text-sm font-semibold text-[#a54d2f] hover:underline"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--bl)] hover:underline"
         >
-          ← Account
+          <ArrowLeft size={16} aria-hidden="true" /> Account
         </Link>
-        <h1 className="mt-5 text-4xl font-semibold tracking-tight">Settings</h1>
-        <p className="mt-2 text-[#506665]">
+        <h1 className="azapay-display-title mt-4">Settings</h1>
+        <p className="azapay-muted mt-2">
           Manage your profile and communication preferences.
         </p>
         <div className="mt-8 grid gap-6 lg:grid-cols-2">

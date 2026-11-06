@@ -6,7 +6,7 @@ async function createTestAccount(page: import("@playwright/test").Page) {
   await page
     .getByRole("textbox", { name: "Email address" })
     .fill("journey@example.test")
-  await page.getByLabel("Password").fill("safe-test-password")
+  await page.getByLabel("Password", { exact: true }).fill("safe-test-password")
   await page.getByRole("button", { name: "Create account" }).click()
   await expect(page).toHaveURL(/\/$/, { timeout: 45_000 })
 }

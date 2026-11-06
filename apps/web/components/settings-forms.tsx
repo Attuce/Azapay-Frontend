@@ -10,8 +10,7 @@ import {
 import type { User } from "@/src/features/auth/schemas"
 import type { Consent, Settings } from "@/src/features/settings/schemas"
 
-const inputClass =
-  "mt-2 h-11 w-full rounded-xl border border-[#9eafab] bg-white px-4 outline-none focus:border-[#193a3d] focus:ring-2 focus:ring-[#8ab5a8]"
+const inputClass = "field mt-2"
 
 function Status({
   state,
@@ -23,7 +22,7 @@ function Status({
   return (
     <p
       role={state.success ? "status" : "alert"}
-      className={`rounded-xl px-4 py-3 text-sm ${state.success ? "bg-[#e6f2ed] text-[#245b49]" : "bg-[#fff1eb] text-[#8c3c24]"}`}
+      className={`rounded-xl px-4 py-3 text-sm ${state.success ? "bg-[var(--ok-tint)] text-[var(--ok)]" : "bg-[var(--er-tint)] text-[var(--er)]"}`}
     >
       {state.message}
     </p>
@@ -37,11 +36,11 @@ export function ProfileForm({ profile }: { profile: User }) {
   return (
     <form
       action={action}
-      className="space-y-5 rounded-2xl border border-[#cbd6d3] bg-white p-6"
+      className="space-y-5 rounded-2xl border border-[var(--ln)] bg-[var(--cd)] p-6"
     >
       <div>
         <h2 className="text-xl font-semibold">Profile</h2>
-        <p className="mt-1 text-sm text-[#506665]">
+        <p className="mt-1 text-sm text-[var(--mu)]">
           Update how your account identifies you.
         </p>
       </div>
@@ -81,7 +80,7 @@ export function ProfileForm({ profile }: { profile: User }) {
       <Status state={state} />
       <button
         disabled={pending}
-        className="rounded-full bg-[#193a3d] px-5 py-2.5 font-semibold text-white disabled:opacity-60"
+        className="rounded-full bg-[var(--bl)] px-5 py-2.5 font-semibold text-white disabled:opacity-60"
       >
         {pending ? "Saving…" : "Save profile"}
       </button>
@@ -110,11 +109,11 @@ export function PreferencesForm({ settings }: { settings: Settings }) {
   return (
     <form
       action={action}
-      className="space-y-5 rounded-2xl border border-[#cbd6d3] bg-white p-6"
+      className="space-y-5 rounded-2xl border border-[var(--ln)] bg-[var(--cd)] p-6"
     >
       <div>
         <h2 className="text-xl font-semibold">Preferences</h2>
-        <p className="mt-1 text-sm text-[#506665]">
+        <p className="mt-1 text-sm text-[var(--mu)]">
           Choose when and how AzaPay contacts you.
         </p>
       </div>
@@ -128,7 +127,7 @@ export function PreferencesForm({ settings }: { settings: Settings }) {
           maxLength={64}
           aria-describedby="timezone-help"
         />
-        <span id="timezone-help" className="mt-2 block text-xs font-normal text-[#506665]">
+        <span id="timezone-help" className="mt-2 block text-xs font-normal text-[var(--mu)]">
           Use an IANA timezone such as Africa/Lagos or Europe/London.
         </span>
       </label>
@@ -140,7 +139,7 @@ export function PreferencesForm({ settings }: { settings: Settings }) {
               type="checkbox"
               name={name}
               defaultChecked={checked}
-              className="size-4 accent-[#193a3d]"
+              className="size-4 accent-[var(--bl)]"
             />
             {label}
           </label>
@@ -149,7 +148,7 @@ export function PreferencesForm({ settings }: { settings: Settings }) {
       <Status state={state} />
       <button
         disabled={pending}
-        className="rounded-full bg-[#193a3d] px-5 py-2.5 font-semibold text-white disabled:opacity-60"
+        className="rounded-full bg-[var(--bl)] px-5 py-2.5 font-semibold text-white disabled:opacity-60"
       >
         {pending ? "Saving…" : "Save preferences"}
       </button>
@@ -171,23 +170,23 @@ function ConsentGrantForm({
   return (
     <form
       action={action}
-      className="flex flex-wrap items-center justify-between gap-4 border-t border-[#e1e8e5] py-4"
+      className="flex flex-wrap items-center justify-between gap-4 border-t border-[var(--ln)] py-4"
     >
       <div>
         <p className="font-medium">
           <code>{scope}</code>
         </p>
-        <p className="mt-1 text-sm text-[#506665]">Current version: {version}</p>
+        <p className="mt-1 text-sm text-[var(--mu)]">Current version: {version}</p>
         <a
           href={`https://example.com/policies/${encodeURIComponent(scope)}/${encodeURIComponent(version)}`}
           target="_blank"
           rel="noreferrer"
-          className="mt-2 inline-block font-medium text-[#a54d2f] underline underline-offset-4"
+          className="mt-2 inline-block font-medium text-[var(--bl)] underline underline-offset-4"
         >
           Read the {scope} policy (placeholder link)
         </a>
         {accepted && (
-          <p className="mt-1 text-sm text-emerald-800">
+          <p className="mt-1 text-sm text-[var(--ok)]">
             Accepted current version
           </p>
         )}
@@ -198,7 +197,7 @@ function ConsentGrantForm({
           <input type="hidden" name="version" value={version} />
           <button
             disabled={pending}
-            className="rounded-full bg-[#193a3d] px-5 py-2.5 font-semibold text-white disabled:opacity-60"
+            className="rounded-full bg-[var(--bl)] px-5 py-2.5 font-semibold text-white disabled:opacity-60"
           >
             {pending ? "Saving…" : "Accept current version"}
           </button>
@@ -216,9 +215,9 @@ export function ConsentManager({ consent }: { readonly consent: Consent }) {
   const requirements = Object.entries(consent.required_consents)
 
   return (
-    <section className="rounded-2xl border border-[#cbd6d3] bg-white p-6">
+    <section className="rounded-2xl border border-[var(--ln)] bg-[var(--cd)] p-6">
       <h2 className="text-xl font-semibold">Consent</h2>
-      <p className="mt-1 text-sm text-[#506665]">
+      <p className="mt-1 text-sm text-[var(--mu)]">
         Review the current scope and version identifiers published by AzaPay.
         Policy links below use placeholder URLs and must be replaced with
         approved policy pages before launch.
@@ -241,7 +240,7 @@ export function ConsentManager({ consent }: { readonly consent: Consent }) {
           })}
         </div>
       ) : (
-        <p className="mt-4 text-sm text-[#506665]">
+        <p className="mt-4 text-sm text-[var(--mu)]">
           There are no required consent updates.
         </p>
       )}
@@ -253,15 +252,15 @@ export function ConsentManager({ consent }: { readonly consent: Consent }) {
 export function AccountClosureForm() {
   const [state, action, pending] = useActionState(deactivateAccountAction, null)
   return (
-    <form action={action} className="rounded-2xl border border-[#d6a392] bg-white p-6">
+    <form action={action} className="rounded-2xl border border-[var(--er)] bg-[var(--cd)] p-6">
       <h2 className="text-xl font-semibold">Close account</h2>
-      <p className="mt-2 text-sm text-[#506665]">This deactivates your account and asks AzaPay to revoke every active session. You will be signed out.</p>
+      <p className="mt-2 text-sm text-[var(--mu)]">This deactivates your account and asks AzaPay to revoke every active session. You will be signed out.</p>
       <label className="mt-4 block text-sm font-medium">
         Type <code>DEACTIVATE</code> to confirm
         <input className={inputClass} name="confirmation" autoComplete="off" required pattern="DEACTIVATE" />
       </label>
       <Status state={state} />
-      <button disabled={pending} className="mt-4 rounded-full bg-[#8c3c24] px-5 py-2.5 font-semibold text-white disabled:opacity-60">
+      <button disabled={pending} className="mt-4 rounded-full bg-[var(--er)] px-5 py-2.5 font-semibold text-white disabled:opacity-60">
         {pending ? "Closing account…" : "Deactivate account"}
       </button>
     </form>
