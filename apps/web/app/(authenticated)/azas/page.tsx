@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { connection } from "next/server"
 import { run } from "effection"
-import { ArrowLeft, Shield } from "lucide-react"
+import { ArrowDownLeft, ArrowLeft, ChevronRight, Landmark, Mail } from "lucide-react"
 import { AzaCollectionForms } from "@/components/aza-forms"
 import { AccessTokenContext, HttpContext } from "@/src/application/context"
 import { currentUser } from "@/src/features/auth/operations"
@@ -11,6 +11,15 @@ import { createAuthenticatedServerHttp } from "@/src/server/http"
 import { requirePageSession } from "@/src/server/session"
 
 export const metadata = { title: "Azas | AzaPay" }
+
+
+/** Insert thousands separators into a contract money string without numeric conversion. */
+function groupMoney(value: string): string {
+  const match = /^(0|[1-9]\d*)\.\d{2}$/.exec(value)
+  if (!match) return value
+  const [whole = value, fraction = "00"] = value.split(".")
+  return `${whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}.${fraction}`
+}
 
 /** Render the authenticated Aza list and create/accept journey. */
 export default async function AzasPage({
@@ -54,23 +63,38 @@ export default async function AzasPage({
         </Link>
 
         <h1 className="azapay-display-title mt-4">Azas</h1>
-        <p className="azapay-muted mt-2 max-w-2xl">Create and manage savings spaces, invite members, and review backend-provided contribution and withdrawal state.</p>
+        <p className="azapay-muted mt-2 max-w-2xl">A wallet is created automatically when you add an Aza category.</p>
 
-        <section className="mt-8 grid gap-4 sm:grid-cols-2" aria-label="Your Azas">
-          {visible.length ? visible.map(({ aza, isOwner }) => (
-            <Link key={aza.id} href={`/azas/${aza.id}`} className="azapay-panel group transition-colors hover:border-[var(--bl)]">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex min-w-0 items-start gap-3">
-                  <span className="azapay-icon-badge"><Shield size={20} aria-hidden="true" /></span>
-                  <h2 className="text-xl font-extrabold text-[var(--ink)]">{aza.name}</h2>
-                </div>
-                <span className="text-xs capitalize text-[var(--mu)]">{isOwner ? "Owner" : "Member"}</span>
+        <section className="azapay-wallet-grid mt-8" aria-label="Your Azas">
+          {visible.length ? visible.map(({ aza }) => (
+            <article key={aza.id} className="azapay-wallet">
+              <div className="azapay-wallet-top">
+                <h2 className="azapay-wallet-name" title={aza.name}>{aza.name}</h2>
+                <Mail size={18} aria-hidden="true" className="opacity-90" />
               </div>
-              <p className="mt-2 text-sm capitalize text-[var(--mu)]">{aza.visibility} · {aza.mode} · {aza.status}</p>
-              <p className="mt-4 font-bold text-lg tabular-nums text-[var(--ink)]">{aza.display_balance === null ? "Balance not provided" : `₦${aza.display_balance}`}</p>
-            </Link>
+
+              <div className="azapay-wallet-balance">
+                <b title={aza.display_balance === null ? "Balance not provided by the backend" : undefined}>{aza.display_balance === null ? "Not provided" : `₦${groupMoney(aza.display_balance)}`}</b>
+                <Link className="azapay-wallet-edit" href={`/azas/${aza.id}`}>Edit</Link>
+              </div>
+
+              <hr className="azapay-wallet-divider" />
+
+              <div className="azapay-wallet-bank">
+                <Landmark size={24} aria-hidden="true" className="opacity-95" />
+                <span><strong>Funding source</strong><small>Needed for automatic pulls.</small></span>
+                <Link href="/funding" className="azapay-wallet-connect">Connect</Link>
+              </div>
+
+              <Link href={`/azas/${aza.id}#contribute`} className="azapay-wallet-cta">
+                <ArrowDownLeft size={18} strokeWidth={2.5} aria-hidden="true" /> Let money in
+              </Link>
+
+              <p className="azapay-wallet-note">Runs every pay and category tied to this Aza</p>
+              <Link href="/flow" className="azapay-wallet-pays">View your pays <ChevronRight size={16} aria-hidden="true" /></Link>
+            </article>
           )) : (
-            <p className="azapay-panel text-sm text-[var(--mu)] sm:col-span-2">
+            <p className="azapay-panel text-sm text-[var(--mu)] sm:col-span-full">
               {query ? <>Nothing matches “{query}”.</> : "No Azas are available, or the list could not be loaded."}
             </p>
           )}
