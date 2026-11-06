@@ -81,11 +81,18 @@ function* loadFlowPage(): Operation<Outcome<FlowPageData>> {
 }
 
 /** Render the Flow instruction management journey. */
-export default async function FlowPage() {
+export default async function FlowPage({
+  searchParams,
+}: {
+  readonly searchParams: Promise<{ readonly q?: string }>
+}) {
   await connection()
   const config = loadServerConfig()
+  const { q } = await searchParams
+  const query = (q ?? "").trim()
+
   if (!config) {
-    return <main id="main-content" tabIndex={-1} className="min-h-svh bg-[#f3f5f1] p-12 text-[#172d31]"><h1 className="text-3xl font-semibold">Flow unavailable</h1><p className="mt-3">Please try again in a moment.</p></main>
+    return <main id="main-content" tabIndex={-1} className="azapay-page p-8"><h1 className="azapay-display-title">Flow unavailable</h1><p className="azapay-muted mt-3">Please try again in a moment.</p></main>
   }
 
   const outcome = await run(function* () {
@@ -98,14 +105,14 @@ export default async function FlowPage() {
   })
 
   return (
-    <main id="main-content" tabIndex={-1} className="min-h-svh bg-[#f3f5f1] px-6 py-10 text-[#172d31]">
-      <div className="mx-auto max-w-5xl">
-        <h1 className="azapay-display-title mt-1">Flow</h1>
-        <p className="mt-2 max-w-2xl text-[#506665]">{outcome._tag === "Right" ? outcome.right.flow.description ?? "Where money comes from, and where some of it stays protected." : "Where money comes from, and where some of it stays protected."}</p>
+    <main id="main-content" tabIndex={-1} className="azapay-page">
+      <div className="azapay-page-inner">
+        <h1 className="azapay-display-title">Flow</h1>
+        <p className="azapay-muted mt-2 max-w-2xl">{outcome._tag === "Right" ? outcome.right.flow.description ?? "Where money comes from, and where some of it stays protected." : "Where money comes from, and where some of it stays protected."}</p>
         {outcome._tag === "Left" ? (
-          <section className="mt-8 rounded-2xl border border-[#cbd6d3] bg-white p-8"><h2 className="text-2xl font-semibold">Flow unavailable</h2><p className="mt-2 text-[#506665]">We couldn’t load your instructions. Refresh and try again.</p></section>
+          <section className="azapay-panel mt-8"><h2 className="text-2xl font-extrabold text-[var(--ink)]">Flow unavailable</h2><p className="azapay-muted mt-2">We couldn’t load your instructions. Refresh and try again.</p></section>
         ) : (
-          <div className="mt-8"><FlowJourney flow={outcome.right.flow} categories={outcome.right.categories} fundingSources={outcome.right.fundingSources} upcoming={outcome.right.upcoming} history={outcome.right.history} pays={outcome.right.pays} saves={outcome.right.saves} azas={outcome.right.azas} banks={outcome.right.banks} /></div>
+          <div className="mt-8"><FlowJourney query={query} flow={outcome.right.flow} categories={outcome.right.categories} fundingSources={outcome.right.fundingSources} upcoming={outcome.right.upcoming} history={outcome.right.history} pays={outcome.right.pays} saves={outcome.right.saves} azas={outcome.right.azas} banks={outcome.right.banks} /></div>
         )}
       </div>
     </main>

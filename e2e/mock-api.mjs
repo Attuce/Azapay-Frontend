@@ -253,6 +253,50 @@ const server = createServer(async (request, response) => {
     }
   }
 
+  if (url.pathname === "/v1/azas" && method === "GET") {
+    const created = "2026-01-01T00:00:00.000Z"
+    const aza = (id, name, mode, displayBalance) => ({
+      id,
+      owner_user_id: user.id,
+      name,
+      description: null,
+      purpose: null,
+      handle: null,
+      visibility: "unlisted",
+      mode,
+      is_shared: false,
+      status: "active",
+      target_amount: null,
+      deadline: null,
+      maturity_date: null,
+      cowrywise_profile_id: null,
+      cowrywise_product_code: null,
+      cowrywise_investment_id: null,
+      principal: null,
+      returns_amount: null,
+      display_balance: displayBalance,
+      available_balance: null,
+      lock_status: "unlocked",
+      locked_at: null,
+      lock_release_at: null,
+      lock_period_days: null,
+      lock_rate: null,
+      early_release_fee_percent: null,
+      locked_target: null,
+      closed_at: null,
+      closed_by_user_id: null,
+      closure_reason: null,
+      created_at: created,
+      updated_at: created,
+    })
+    respond(response, 200, [
+      aza("1b9d6bcd-bbfd-4b2d-9b5d-9f8a111aa001", "Household", "flexible", "140000.00"),
+      aza("2c8e7cde-ccfe-4c3e-acb6-af9b222bb002", "School fees", "fixed", "10000.00"),
+      aza("3d9f8def-dd0f-4d4f-bcd7-ba0c333cc003", "Emergency", "flexible", "10000.00"),
+    ])
+    return
+  }
+
   if (url.pathname === "/v1/analytics/overview") {
     respond(response, 200, {
       generated_at: new Date().toISOString(),

@@ -3,6 +3,7 @@ import { connection } from "next/server"
 import { randomUUID } from "node:crypto"
 import { run } from "effection"
 import { left, right } from "fp-ts/Either"
+import { ArrowLeft } from "lucide-react"
 import { AzaDetailJourney } from "@/components/aza-forms"
 import { AccessTokenContext, HttpContext } from "@/src/application/context"
 import { currentUser } from "@/src/features/auth/operations"
@@ -20,7 +21,7 @@ export default async function AzaDetailPage({ params }: { readonly params: Promi
   await connection()
   const { azaId } = await params
   const config = loadServerConfig()
-  if (!config) return <main id="main-content" tabIndex={-1} className="p-10"><h1 className="text-3xl font-semibold">Aza unavailable</h1><p className="mt-3">AzaPay is temporarily unavailable.</p></main>
+  if (!config) return <main id="main-content" tabIndex={-1} className="p-10"><h1 className="azapay-display-title">Aza unavailable</h1><p className="azapay-muted mt-3">AzaPay is temporarily unavailable.</p></main>
   const result = await run(function* () {
     yield* ServerConfigContext.set(config)
     const session = yield* requirePageSession(`/azas/${azaId}`)
@@ -40,5 +41,5 @@ export default async function AzaDetailPage({ params }: { readonly params: Promi
     if (contributions._tag === "Left" || invites._tag === "Left" || members._tag === "Left" || position._tag === "Left" || withdrawals._tag === "Left" || fundingSources._tag === "Left" || banks._tag === "Left") return left("unavailable" as const)
     return right({ aza: aza.right, isOwner: aza.right.owner_user_id === user.right.id, contributions: contributions.right, invites: invites.right, members: members.right, position: position.right, withdrawals: withdrawals.right.map(toWithdrawalView), fundingSources: fundingSources.right, banks: banks.right })
   })
-  return <main id="main-content" tabIndex={-1} className="min-h-svh bg-[#f3f5f1] px-6 py-10 text-[#172d31]"><div className="mx-auto max-w-5xl"><Link href="/azas" className="text-sm font-semibold text-[#a54d2f] hover:underline">← All Azas</Link>{result._tag === "Left" ? <section className="mt-6 rounded-2xl border border-[#cbd6d3] bg-white p-8"><h1 className="text-2xl font-semibold">Aza unavailable</h1><p className="mt-2 text-[#506665]">We couldn’t load this Aza and its activity. Refresh to try again.</p></section> : <><h1 className="mt-5 text-4xl font-semibold tracking-tight">{result.right.aza.name}</h1><p className="mt-2 text-[#506665]">{result.right.aza.description ?? result.right.aza.purpose ?? "Manage this Aza."}</p><AzaDetailJourney {...result.right} requestKey={randomUUID()} releaseKey={randomUUID()} /></>}</div></main>
+  return <main id="main-content" tabIndex={-1} className="azapay-page"><div className="azapay-page-inner"><Link href="/azas" className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--bl)] hover:underline"><ArrowLeft size={16} aria-hidden="true" /> All Azas</Link>{result._tag === "Left" ? <section className="azapay-panel mt-6"><h1 className="text-2xl font-extrabold text-[var(--ink)]">Aza unavailable</h1><p className="azapay-muted mt-2">We couldn’t load this Aza and its activity. Refresh to try again.</p></section> : <><h1 className="azapay-display-title mt-4">{result.right.aza.name}</h1><p className="mt-2 text-[var(--mu)]">{result.right.aza.description ?? result.right.aza.purpose ?? "Manage this Aza."}</p><AzaDetailJourney {...result.right} requestKey={randomUUID()} releaseKey={randomUUID()} /></>}</div></main>
 }

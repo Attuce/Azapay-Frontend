@@ -1,6 +1,8 @@
 "use client"
 
 import { useActionState, useEffect, useRef, useState } from "react"
+import { ChevronLeft, Plus, X } from "lucide-react"
+import { right } from "fp-ts/Either"
 import type { Outcome } from "@/src/application/errors"
 import {
   archiveFlowCategoryAction,
@@ -25,12 +27,12 @@ import type { Category, Flow, FlowHistoryView, FlowUpcomingView } from "@/src/fe
 import type { FlowAzaOption, FlowBank, FlowPayView, FlowSave } from "@/src/features/flow/instruction-schemas"
 import type { FundingConnection } from "@/src/features/funding/schemas"
 
-const inputClass = "mt-2 h-11 w-full rounded-xl border border-[#9eafab] bg-white px-4 outline-none focus:border-[#193a3d] focus:ring-2 focus:ring-[#8ab5a8]"
+const inputClass = "field mt-2"
 
 function Status({ state }: { state: FlowFormState }) {
   if (!state) return null
 
-  return <p role={state.success ? "status" : "alert"} className={`rounded-xl px-4 py-3 text-sm ${state.success ? "bg-[#e6f2ed] text-[#245b49]" : "bg-[#fff1eb] text-[#8c3c24]"}`}>{state.message}</p>
+  return <p role={state.success ? "status" : "alert"} className={`rounded-xl px-4 py-3 text-sm ${state.success ? "bg-[var(--ok-tint)] text-[var(--ok)]" : "bg-[var(--er-tint)] text-[var(--er)]"}`}>{state.message}</p>
 }
 
 function CategoryCard({ category, flowArchived, fundingSources }: {
@@ -46,19 +48,19 @@ function CategoryCard({ category, flowArchived, fundingSources }: {
   const archived = category.status === "archived" || flowArchived
 
   return (
-    <article className="rounded-2xl border border-[#dfe7e4] bg-white p-5">
+    <article className="rounded-2xl border border-[var(--ln)] bg-[var(--cd)] p-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h3 className="text-lg font-semibold">{category.name}</h3>
-          <p className="mt-1 text-sm capitalize text-[#506665]">{category.frequency} · {category.status}</p>
-          {category.description ? <p className="mt-2 text-sm text-[#506665]">{category.description}</p> : null}
-          {category.next_run_at ? <p className="mt-2 text-xs text-[#506665]">Next run: {new Intl.DateTimeFormat("en-NG", { dateStyle: "medium", timeStyle: "short", timeZone: "Africa/Lagos" }).format(new Date(category.next_run_at))}</p> : null}
+          <p className="mt-1 text-sm capitalize text-[var(--mu)]">{category.frequency} · {category.status}</p>
+          {category.description ? <p className="mt-2 text-sm text-[var(--mu)]">{category.description}</p> : null}
+          {category.next_run_at ? <p className="mt-2 text-xs text-[var(--mu)]">Next run: {new Intl.DateTimeFormat("en-NG", { dateStyle: "medium", timeStyle: "short", timeZone: "Africa/Lagos" }).format(new Date(category.next_run_at))}</p> : null}
         </div>
         <p className="text-xl font-semibold">₦{category.amount_per_run}</p>
       </div>
 
       {!archived ? (
-        <div className="mt-5 grid gap-4 border-t border-[#e5ece9] pt-4 md:grid-cols-[1fr_auto]">
+        <div className="mt-5 grid gap-4 border-t border-[var(--ln)] pt-4 md:grid-cols-[1fr_auto]">
           <form action={fundingAction} className="flex flex-wrap items-end gap-3 md:col-span-2">
             <input type="hidden" name="category_id" value={category.id} />
             <label className="min-w-56 flex-1 text-sm font-medium">Category funding source
@@ -69,7 +71,7 @@ function CategoryCard({ category, flowArchived, fundingSources }: {
                 ))}
               </select>
             </label>
-            <button disabled={fundingPending} className="h-11 rounded-full border border-[#193a3d] px-4 text-sm font-semibold text-[#193a3d] disabled:opacity-60">{fundingPending ? "Saving…" : "Update source"}</button>
+            <button disabled={fundingPending} className="h-11 rounded-full border border-[var(--tx)] px-4 text-sm font-semibold text-[var(--ink)] disabled:opacity-60">{fundingPending ? "Saving…" : "Update source"}</button>
             <Status state={fundingState} />
           </form>
 
@@ -90,7 +92,7 @@ function CategoryCard({ category, flowArchived, fundingSources }: {
             <label className="text-sm font-medium">Description
               <input className={inputClass} name="description" maxLength={500} defaultValue={category.description ?? ""} />
             </label>
-            <div className="md:col-span-3"><button disabled={detailsPending} className="h-11 rounded-full border border-[#193a3d] px-4 text-sm font-semibold text-[#193a3d] disabled:opacity-60">{detailsPending ? "Saving…" : "Update details"}</button><Status state={detailsState} /></div>
+            <div className="md:col-span-3"><button disabled={detailsPending} className="h-11 rounded-full border border-[var(--tx)] px-4 text-sm font-semibold text-[var(--ink)] disabled:opacity-60">{detailsPending ? "Saving…" : "Update details"}</button><Status state={detailsState} /></div>
           </form>
 
           <form action={amountAction} className="flex flex-wrap items-end gap-3">
@@ -98,7 +100,7 @@ function CategoryCard({ category, flowArchived, fundingSources }: {
             <label className="min-w-48 flex-1 text-sm font-medium">Amount per run
               <input className={inputClass} name="amount_per_run" inputMode="decimal" pattern="[0-9]+\.[0-9]{2}" defaultValue={category.amount_per_run} required />
             </label>
-            <button disabled={amountPending} className="h-11 rounded-full border border-[#193a3d] px-4 text-sm font-semibold text-[#193a3d] disabled:opacity-60">{amountPending ? "Saving…" : "Update amount"}</button>
+            <button disabled={amountPending} className="h-11 rounded-full border border-[var(--tx)] px-4 text-sm font-semibold text-[var(--ink)] disabled:opacity-60">{amountPending ? "Saving…" : "Update amount"}</button>
             <Status state={amountState} />
           </form>
 
@@ -106,12 +108,12 @@ function CategoryCard({ category, flowArchived, fundingSources }: {
             <form action={toggleAction}>
               <input type="hidden" name="category_id" value={category.id} />
               <input type="hidden" name="next_status" value={category.status === "paused" ? "active" : "paused"} />
-              <button disabled={togglePending} className="h-11 rounded-full border border-[#193a3d] px-4 text-sm font-semibold text-[#193a3d] disabled:opacity-60">{togglePending ? "Updating…" : category.status === "paused" ? "Resume" : "Pause"}</button>
+              <button disabled={togglePending} className="h-11 rounded-full border border-[var(--tx)] px-4 text-sm font-semibold text-[var(--ink)] disabled:opacity-60">{togglePending ? "Updating…" : category.status === "paused" ? "Resume" : "Pause"}</button>
               <Status state={toggleState} />
             </form>
             <form action={archiveAction}>
               <input type="hidden" name="category_id" value={category.id} />
-              <button disabled={archivePending} className="h-11 rounded-full border border-[#c77a64] px-4 text-sm font-semibold text-[#8c3c24] disabled:opacity-60">{archivePending ? "Archiving…" : "Archive"}</button>
+              <button disabled={archivePending} className="h-11 rounded-full border border-[var(--er)] px-4 text-sm font-semibold text-[var(--er)] disabled:opacity-60">{archivePending ? "Archiving…" : "Archive"}</button>
               <Status state={archiveState} />
             </form>
           </div>
@@ -129,18 +131,18 @@ function PaymentInstructionCard({ pay, azas, banks }: { pay: FlowPayView; azas: 
   const canActivate = pay.status === "draft" || pay.status === "ready" || pay.status === "paused"
 
   return (
-    <article className="rounded-2xl border border-[#dfe7e4] bg-white p-5">
+    <article className="rounded-2xl border border-[var(--ln)] bg-[var(--cd)] p-5">
       <div className="flex flex-wrap justify-between gap-3">
         <div>
           <h3 className="font-semibold">{pay.beneficiary_name}</h3>
-          <p className="mt-1 text-sm capitalize text-[#506665]">{pay.destination_type.replaceAll("_", " ")} · {pay.status}</p>
-          <p className="mt-1 text-sm text-[#506665]">{pay.bank_name ?? (pay.aza_id ? "Aza destination" : "Destination details saved")}</p>
-          {pay.destination_locked ? <p className="mt-1 text-xs text-[#506665]">Destination locked after first successful payment.</p> : null}
+          <p className="mt-1 text-sm capitalize text-[var(--mu)]">{pay.destination_type.replaceAll("_", " ")} · {pay.status}</p>
+          <p className="mt-1 text-sm text-[var(--mu)]">{pay.bank_name ?? (pay.aza_id ? "Aza destination" : "Destination details saved")}</p>
+          {pay.destination_locked ? <p className="mt-1 text-xs text-[var(--mu)]">Destination locked after first successful payment.</p> : null}
         </div>
         <p className="text-lg font-semibold">₦{pay.amount}</p>
       </div>
 
-      <div className="mt-4 flex flex-wrap items-start gap-3 border-t border-[#e5ece9] pt-4">
+      <div className="mt-4 flex flex-wrap items-start gap-3 border-t border-[var(--ln)] pt-4">
         <form action={updateAction} className="flex flex-wrap items-end gap-3">
           <input type="hidden" name="pay_id" value={pay.id} />
           <label className="text-sm font-medium">Amount per run
@@ -158,21 +160,21 @@ function PaymentInstructionCard({ pay, azas, banks }: { pay: FlowPayView; azas: 
           <label className="text-sm font-medium">Day of month
             <input className={inputClass} name="day_of_month" type="number" min={1} max={31} defaultValue={pay.day_of_month ?? ""} />
           </label>
-          <button disabled={updatePending} className="h-11 rounded-full border border-[#193a3d] px-4 text-sm font-semibold text-[#193a3d] disabled:opacity-60">{updatePending ? "Saving…" : "Save payment"}</button>
+          <button disabled={updatePending} className="h-11 rounded-full border border-[var(--tx)] px-4 text-sm font-semibold text-[var(--ink)] disabled:opacity-60">{updatePending ? "Saving…" : "Save payment"}</button>
           <Status state={updateState} />
         </form>
         {canPause || canActivate ? (
           <form action={transitionAction}>
             <input type="hidden" name="pay_id" value={pay.id} />
             <input type="hidden" name="action" value={canPause ? "pause" : "activate"} />
-            <button disabled={transitionPending} className="h-11 rounded-full bg-[#193a3d] px-4 text-sm font-semibold text-white disabled:opacity-60">{transitionPending ? "Updating…" : canPause ? "Pause payment" : "Schedule payment"}</button>
+            <button disabled={transitionPending} className="h-11 rounded-full bg-[var(--bl)] px-4 text-sm font-semibold text-white disabled:opacity-60">{transitionPending ? "Updating…" : canPause ? "Pause payment" : "Schedule payment"}</button>
             <Status state={transitionState} />
           </form>
         ) : null}
       </div>
 
       {!pay.destination_locked ? (
-        <form action={destinationAction} className="mt-4 grid gap-3 border-t border-[#e5ece9] pt-4 md:grid-cols-3">
+        <form action={destinationAction} className="mt-4 grid gap-3 border-t border-[var(--ln)] pt-4 md:grid-cols-3">
           <input type="hidden" name="pay_id" value={pay.id} />
           <label className="text-sm font-medium">Update destination type
             <select className={inputClass} name="destination_type" defaultValue={pay.destination_type}><option value="bank">Bank account</option><option value="aza">Aza</option><option value="shared_aza">Shared Aza</option></select>
@@ -186,7 +188,7 @@ function PaymentInstructionCard({ pay, azas, banks }: { pay: FlowPayView; azas: 
           <label className="text-sm font-medium">Aza
             <select className={inputClass} name="aza_id" defaultValue=""><option value="">Choose an Aza</option>{azas.map((aza) => <option key={aza.id} value={aza.id}>{aza.name}</option>)}</select>
           </label>
-          <button disabled={destinationPending} className="h-11 self-end rounded-full border border-[#193a3d] px-4 text-sm font-semibold text-[#193a3d] disabled:opacity-60">{destinationPending ? "Updating…" : "Update destination"}</button>
+          <button disabled={destinationPending} className="h-11 self-end rounded-full border border-[var(--tx)] px-4 text-sm font-semibold text-[var(--ink)] disabled:opacity-60">{destinationPending ? "Updating…" : "Update destination"}</button>
           <Status state={destinationState} />
         </form>
       ) : null}
@@ -200,17 +202,17 @@ function SaveInstructionCard({ save, azaName, azas }: { save: FlowSave; azaName:
   const [destinationState, destinationAction, destinationPending] = useActionState(updateFlowSaveDestinationAction, null)
 
   return (
-    <article className="rounded-2xl border border-[#dfe7e4] bg-white p-5">
+    <article className="rounded-2xl border border-[var(--ln)] bg-[var(--cd)] p-5">
       <div className="flex flex-wrap justify-between gap-3">
         <div>
           <h3 className="font-semibold">{save.name ?? azaName}</h3>
-          <p className="mt-1 text-sm capitalize text-[#506665]">Saving to {azaName} · {save.status}</p>
-          <p className="mt-1 text-sm text-[#506665]">{save.frequency ?? save.trigger} · {save.funding_complete ? "Funding ready" : "Funding needs attention"}</p>
+          <p className="mt-1 text-sm capitalize text-[var(--mu)]">Saving to {azaName} · {save.status}</p>
+          <p className="mt-1 text-sm text-[var(--mu)]">{save.frequency ?? save.trigger} · {save.funding_complete ? "Funding ready" : "Funding needs attention"}</p>
         </div>
         <p className="text-lg font-semibold">₦{save.amount}</p>
       </div>
 
-      <div className="mt-4 flex flex-wrap items-start gap-3 border-t border-[#e5ece9] pt-4">
+      <div className="mt-4 flex flex-wrap items-start gap-3 border-t border-[var(--ln)] pt-4">
         <form action={updateAction} className="flex flex-wrap items-end gap-3">
           <input type="hidden" name="save_id" value={save.id} />
           <label className="text-sm font-medium">Name
@@ -237,26 +239,26 @@ function SaveInstructionCard({ save, azaName, azas }: { save: FlowSave; azaName:
           <label className="text-sm font-medium">Day of month
             <input className={inputClass} name="day_of_month" type="number" min={1} max={31} defaultValue={save.day_of_month ?? ""} />
           </label>
-          <button disabled={updatePending} className="h-11 rounded-full border border-[#193a3d] px-4 text-sm font-semibold text-[#193a3d] disabled:opacity-60">{updatePending ? "Saving…" : "Save changes"}</button>
+          <button disabled={updatePending} className="h-11 rounded-full border border-[var(--tx)] px-4 text-sm font-semibold text-[var(--ink)] disabled:opacity-60">{updatePending ? "Saving…" : "Save changes"}</button>
           <Status state={updateState} />
         </form>
         {save.status !== "processing" && save.status !== "successful" ? (
           <form action={transitionAction}>
             <input type="hidden" name="save_id" value={save.id} />
             <input type="hidden" name="next_status" value={save.paused ? "scheduled" : "paused"} />
-            <button disabled={transitionPending} className="h-11 rounded-full border border-[#193a3d] px-4 text-sm font-semibold text-[#193a3d] disabled:opacity-60">{transitionPending ? "Updating…" : save.paused ? "Resume saving" : "Pause saving"}</button>
+            <button disabled={transitionPending} className="h-11 rounded-full border border-[var(--tx)] px-4 text-sm font-semibold text-[var(--ink)] disabled:opacity-60">{transitionPending ? "Updating…" : save.paused ? "Resume saving" : "Pause saving"}</button>
             <Status state={transitionState} />
           </form>
         ) : null}
       </div>
 
       {!save.destination_locked ? (
-        <form action={destinationAction} className="mt-4 flex flex-wrap items-end gap-3 border-t border-[#e5ece9] pt-4">
+        <form action={destinationAction} className="mt-4 flex flex-wrap items-end gap-3 border-t border-[var(--ln)] pt-4">
           <input type="hidden" name="save_id" value={save.id} />
           <label className="min-w-56 flex-1 text-sm font-medium">Update Aza destination
             <select className={inputClass} name="aza_id" defaultValue={save.aza_id}>{azas.map((aza) => <option key={aza.id} value={aza.id}>{aza.name}</option>)}</select>
           </label>
-          <button disabled={destinationPending} className="h-11 rounded-full border border-[#193a3d] px-4 text-sm font-semibold text-[#193a3d] disabled:opacity-60">{destinationPending ? "Updating…" : "Update destination"}</button>
+          <button disabled={destinationPending} className="h-11 rounded-full border border-[var(--tx)] px-4 text-sm font-semibold text-[var(--ink)] disabled:opacity-60">{destinationPending ? "Updating…" : "Update destination"}</button>
           <Status state={destinationState} />
         </form>
       ) : null}
@@ -272,6 +274,7 @@ function FlowChildInstructions({
   azas,
   banks,
   archived,
+  query = "",
 }: {
   categories: Category[]
   fundingSources: FundingConnection[]
@@ -280,7 +283,11 @@ function FlowChildInstructions({
   azas: Outcome<FlowAzaOption[]>
   banks: Outcome<FlowBank[]>
   archived: boolean
+  query?: string
 }) {
+  const needle = query.trim().toLowerCase()
+  const matches = (...values: (string | null | undefined)[]) =>
+    !needle || values.some((value) => value?.toLowerCase().includes(needle))
   const [saveState, saveAction, savePending] = useActionState(createFlowSaveAction, null)
   const activeCategories = categories.filter((category) => category.status === "active")
   const availableAzas = azas._tag === "Right" ? azas.right.filter((aza) => aza.status === "open" || aza.status === "active") : []
@@ -401,14 +408,14 @@ function FlowChildInstructions({
     <section className="space-y-4">
       <div>
         <h2 className="text-xl font-semibold">Payments and savings</h2>
-        <p className="mt-1 text-sm text-[#506665]">Create payment or saving instructions inside a Flow category. The API decides readiness and execution.</p>
+        <p className="mt-1 text-sm text-[var(--mu)]">Create payment or saving instructions inside a Flow category. The API decides readiness and execution.</p>
       </div>
 
       {!archived && activeCategories.length > 0 ? (
         <div className="grid gap-4 xl:grid-cols-2">
           <div id="add-pay" className="azapay-pay-launch scroll-mt-8">
-            <div className="azapay-pay-launch-copy"><h3 className="font-semibold">Payments</h3><p className="mt-1 text-sm text-[#506665]">Set up a payment to a bank account or Aza.</p></div>
-            <button type="button" onClick={() => { setPayError(null); setPayOpen(true) }} className="azapay-add-button mt-4">＋ Add a pay</button>
+            <div className="azapay-pay-launch-copy"><h3 className="font-semibold">Payments</h3><p className="mt-1 text-sm text-[var(--mu)]">Set up a payment to a bank account or Aza.</p></div>
+            <button type="button" onClick={() => { setPayError(null); setPayOpen(true) }} className="azapay-add-button mt-4"><Plus size={18} strokeWidth={2.4} aria-hidden="true" /> Add a pay</button>
             <Status state={payState} />
           </div>
 
@@ -416,9 +423,9 @@ function FlowChildInstructions({
             <div className="azapay-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) closePayWizard() }}>
               <section ref={payDialogRef} className="azapay-modal azapay-pay-wizard" role="dialog" aria-modal="true" aria-labelledby="pay-wizard-title">
                 <div className="azapay-wizard-topline">
-                  <button type="button" aria-label="Go back" disabled={payStep === 0} onClick={() => { setPayError(null); setPayStep((current) => Math.max(current - 1, 0)) }}>←</button>
+                  <button type="button" aria-label="Go back" disabled={payStep === 0} onClick={() => { setPayError(null); setPayStep((current) => Math.max(current - 1, 0)) }}><ChevronLeft size={20} /></button>
                   <span>STEP {payStep + 1} OF 4</span>
-                  <button type="button" aria-label="Close" onClick={closePayWizard}>×</button>
+                  <button type="button" aria-label="Close" onClick={closePayWizard}><X size={20} /></button>
                 </div>
                 <form action={payAction} className="azapay-wizard-form">
                   <input type="hidden" name="category_id" value={payFields.category_id} />
@@ -488,7 +495,7 @@ function FlowChildInstructions({
             </div>
           ) : null}
 
-          <form action={saveAction} className="grid content-start gap-4 rounded-2xl border border-[#cbd6d3] bg-white p-5">
+          <form action={saveAction} className="grid content-start gap-4 rounded-2xl border border-[var(--ln)] bg-[var(--cd)] p-5">
             <h3 className="font-semibold">Add a saving</h3>
             <label className="text-sm font-medium">Flow category
               <select className={inputClass} name="category_id" required><option value="">Choose category</option>{activeCategories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select>
@@ -526,35 +533,36 @@ function FlowChildInstructions({
             <label className="text-sm font-medium">Memo (optional)
               <input className={inputClass} name="memo" maxLength={500} />
             </label>
-            <button disabled={savePending || availableAzas.length === 0} className="h-11 rounded-full bg-[#193a3d] px-4 text-sm font-semibold text-white disabled:opacity-60">{savePending ? "Creating…" : "Create saving"}</button>
-            {azas._tag === "Left" ? <p className="text-sm text-[#8c3c24]">Azas are temporarily unavailable.</p> : availableAzas.length === 0 ? <p className="text-sm text-[#506665]">Create an Aza before adding a saving instruction.</p> : null}
+            <button disabled={savePending || availableAzas.length === 0} className="h-11 rounded-full bg-[var(--bl)] px-4 text-sm font-semibold text-white disabled:opacity-60">{savePending ? "Creating…" : "Create saving"}</button>
+            {azas._tag === "Left" ? <p className="text-sm text-[var(--er)]">Azas are temporarily unavailable.</p> : availableAzas.length === 0 ? <p className="text-sm text-[var(--mu)]">Create an Aza before adding a saving instruction.</p> : null}
             <Status state={saveState} />
           </form>
         </div>
       ) : !archived ? (
         <div id="add-pay" className="azapay-pay-launch scroll-mt-8">
           <h3 className="font-semibold">Create a Flow category first</h3>
-          <p className="mt-1 max-w-xl text-sm text-[#506665]">Every payment belongs to a category. Add one, then return here to set up its payment.</p>
-          <a className="mt-4 inline-flex rounded-full border border-amber-400 px-4 py-2 text-sm font-semibold text-amber-300 hover:bg-amber-300/10" href="#add-instruction">Add a category</a>
+          <p className="mt-1 max-w-xl text-sm text-[var(--mu)]">Every payment belongs to a category. Add one, then return here to set up its payment.</p>
+          <a className="mt-4 inline-flex rounded-full border border-[var(--bl)] px-4 py-2 text-sm font-semibold text-[var(--bl)] hover:bg-[var(--pi)]" href="#add-instruction">Add a category</a>
         </div>
       ) : null}
 
       <div className="space-y-3">
-        <h3 className="font-semibold">Payments</h3>
-        {pays._tag === "Left" ? <p className="rounded-xl border border-[#cbd6d3] bg-white p-4 text-sm text-[#506665]">Payments are temporarily unavailable.</p> : pays.right.length === 0 ? <p className="rounded-xl border border-[#cbd6d3] bg-white p-4 text-sm text-[#506665]">No payments in Flow yet.</p> : pays.right.map((pay) => <PaymentInstructionCard key={pay.id} pay={pay} azas={availableAzas} banks={banks._tag === "Right" ? banks.right : []} />)}
+        <h3 className="font-semibold text-[var(--ink)]">Payments</h3>
+        {pays._tag === "Left" ? <p className="rounded-xl border border-[var(--ln)] bg-[var(--cd)] p-4 text-sm text-[var(--mu)]">Payments are temporarily unavailable.</p> : (() => { const visible = pays.right.filter((pay) => matches(pay.beneficiary_name, pay.destination_type, pay.bank_name ?? undefined, pay.memo ?? undefined)); return visible.length ? visible.map((pay) => <PaymentInstructionCard key={pay.id} pay={pay} azas={availableAzas} banks={banks._tag === "Right" ? banks.right : []} />) : <p className="rounded-xl border border-[var(--ln)] bg-[var(--cd)] p-4 text-sm text-[var(--mu)]">{needle ? <>Nothing matches “{needle}”.</> : "No payments in Flow yet."}</p> })()}
       </div>
 
       <div className="space-y-3">
-        <h3 className="font-semibold">Savings</h3>
-        {saves._tag === "Left" ? <p className="rounded-xl border border-[#cbd6d3] bg-white p-4 text-sm text-[#506665]">Savings are temporarily unavailable.</p> : saves.right.length === 0 ? <p className="rounded-xl border border-[#cbd6d3] bg-white p-4 text-sm text-[#506665]">No savings in Flow yet.</p> : saves.right.map((save) => <SaveInstructionCard key={save.id} save={save} azaName={azaNames.get(save.aza_id) ?? "Aza"} azas={availableAzas} />)}
+        <h3 className="font-semibold text-[var(--ink)]">Savings</h3>
+        {saves._tag === "Left" ? <p className="rounded-xl border border-[var(--ln)] bg-[var(--cd)] p-4 text-sm text-[var(--mu)]">Savings are temporarily unavailable.</p> : (() => { const visible = saves.right.filter((save) => matches(save.name ?? undefined, azaNames.get(save.aza_id), save.status, save.frequency ?? undefined, save.trigger)); return visible.length ? visible.map((save) => <SaveInstructionCard key={save.id} save={save} azaName={azaNames.get(save.aza_id) ?? "Aza"} azas={availableAzas} />) : <p className="rounded-xl border border-[var(--ln)] bg-[var(--cd)] p-4 text-sm text-[var(--mu)]">{needle ? <>Nothing matches “{needle}”.</> : "No savings in Flow yet."}</p> })()}
       </div>
     </section>
   )
 }
 
 /** Create and manage backend-owned Flow spending and saving instructions. */
-export function FlowJourney({ flow, categories, fundingSources, upcoming, history, pays, saves, azas, banks }: {
+export function FlowJourney({ flow, categories, fundingSources, upcoming, history, pays, saves, azas, banks, query = "" }: {
   flow: Flow
+  query?: string
   categories: Category[]
   fundingSources: FundingConnection[]
   upcoming: Outcome<FlowUpcomingView[]>
@@ -567,15 +575,21 @@ export function FlowJourney({ flow, categories, fundingSources, upcoming, histor
   const [createState, createAction, createPending] = useActionState(createFlowCategoryAction, null)
   const [flowState, flowAction, flowPending] = useActionState(updateFlowAction, null)
   const [flowFundingState, flowFundingAction, flowFundingPending] = useActionState(connectFlowAction, null)
+  const needle = query.trim().toLowerCase()
+  const matches = (...values: (string | null | undefined)[]) =>
+    !needle || values.some((value) => value?.toLowerCase().includes(needle))
   const flowCategories = categories.filter((category) => category.domain_side === "flow")
+  const visibleCategories = flowCategories.filter((category) => matches(category.name, category.frequency, category.status, category.description ?? undefined))
+  const visibleUpcoming = upcoming._tag === "Right" ? right(upcoming.right.filter((run) => matches(run.category_name, run.frequency, run.readiness.ready ? "ready" : "needs attention"))) : upcoming
+  const visibleHistory = history._tag === "Right" ? right(history.right.filter((entry) => matches(entry.category_name, entry.status, entry.recovery_status))) : history
 
   return (
     <div className="space-y-8">
       {flow.status !== "archived" ? (
-        <form action={flowAction} className="grid gap-4 rounded-2xl border border-[#cbd6d3] bg-white p-6 md:grid-cols-3">
+        <form action={flowAction} className="grid gap-4 rounded-2xl border border-[var(--ln)] bg-[var(--cd)] p-6 md:grid-cols-3">
           <div className="md:col-span-3">
             <h2 className="text-xl font-semibold">Flow settings</h2>
-            <p className="mt-1 text-sm text-[#506665]">Pausing Flow affects the domain status. The API controls which instructions can run.</p>
+            <p className="mt-1 text-sm text-[var(--mu)]">Pausing Flow affects the domain status. The API controls which instructions can run.</p>
           </div>
           <label className="text-sm font-medium">Name
             <input className={inputClass} name="name" maxLength={120} defaultValue={flow.name} required />
@@ -587,12 +601,12 @@ export function FlowJourney({ flow, categories, fundingSources, upcoming, histor
             <select className={inputClass} name="status" defaultValue={flow.status}><option value="active">Active</option><option value="paused">Paused</option></select>
           </label>
           <Status state={flowState} />
-          <div><button disabled={flowPending} className="rounded-full border border-[#193a3d] px-5 py-3 font-semibold text-[#193a3d] disabled:opacity-60">{flowPending ? "Saving…" : "Save Flow settings"}</button></div>
+          <div><button disabled={flowPending} className="rounded-full border border-[var(--tx)] px-5 py-3 font-semibold text-[var(--ink)] disabled:opacity-60">{flowPending ? "Saving…" : "Save Flow settings"}</button></div>
         </form>
       ) : null}
 
       {flow.status !== "archived" ? (
-        <form action={flowFundingAction} className="rounded-2xl border border-[#cbd6d3] bg-white p-6">
+        <form action={flowFundingAction} className="rounded-2xl border border-[var(--ln)] bg-[var(--cd)] p-6">
           <input type="hidden" name="flow_id" value={flow.id} />
           <label className="block max-w-xl text-sm font-medium">Flow default funding source
             <select className={inputClass} name="funding_connection_id" defaultValue={flow.default_funding_connection_id ?? ""}>
@@ -602,15 +616,15 @@ export function FlowJourney({ flow, categories, fundingSources, upcoming, histor
               ))}
             </select>
           </label>
-          <button disabled={flowFundingPending} className="mt-4 rounded-full border border-[#193a3d] px-5 py-3 font-semibold text-[#193a3d] disabled:opacity-60">{flowFundingPending ? "Saving…" : "Update Flow source"}</button>
+          <button disabled={flowFundingPending} className="mt-4 rounded-full border border-[var(--tx)] px-5 py-3 font-semibold text-[var(--ink)] disabled:opacity-60">{flowFundingPending ? "Saving…" : "Update Flow source"}</button>
           <Status state={flowFundingState} />
         </form>
       ) : null}
 
-      {flow.status !== "archived" ? <form id="add-instruction" action={createAction} className="grid gap-5 rounded-2xl border border-[#cbd6d3] bg-white p-6 md:grid-cols-2">
+      {flow.status !== "archived" ? <form id="add-instruction" action={createAction} className="grid gap-5 rounded-2xl border border-[var(--ln)] bg-[var(--cd)] p-6 md:grid-cols-2">
         <div className="md:col-span-2">
           <h2 className="text-xl font-semibold">Create an instruction</h2>
-          <p className="mt-1 text-sm text-[#506665]">Set the amount and schedule. The API determines readiness and execution outcomes.</p>
+          <p className="mt-1 text-sm text-[var(--mu)]">Set the amount and schedule. The API determines readiness and execution outcomes.</p>
         </div>
         <label className="text-sm font-medium">Name
           <input className={inputClass} name="name" maxLength={120} required />
@@ -631,45 +645,45 @@ export function FlowJourney({ flow, categories, fundingSources, upcoming, histor
           <input className={inputClass} name="description" maxLength={500} />
         </label>
         <Status state={createState} />
-        <div><button disabled={createPending} className="rounded-full bg-[#193a3d] px-5 py-3 font-semibold text-white disabled:opacity-60">{createPending ? "Creating…" : "Create instruction"}</button></div>
-      </form> : <p className="rounded-2xl border border-[#cbd6d3] bg-white p-5 text-sm text-[#506665]">Flow is archived. Its instructions are shown for reference.</p>}
+        <div><button disabled={createPending} className="rounded-full bg-[var(--bl)] px-5 py-3 font-semibold text-white disabled:opacity-60">{createPending ? "Creating…" : "Create instruction"}</button></div>
+      </form> : <p className="rounded-2xl border border-[var(--ln)] bg-[var(--cd)] p-5 text-sm text-[var(--mu)]">Flow is archived. Its instructions are shown for reference.</p>}
 
       <section className="space-y-4">
         <h2 className="text-xl font-semibold">Flow instructions</h2>
-        {flowCategories.length ? flowCategories.map((category) => <CategoryCard key={category.id} category={category} flowArchived={flow.status === "archived"} fundingSources={fundingSources} />) : <p className="rounded-2xl border border-[#cbd6d3] bg-white p-6 text-sm text-[#506665]">No Flow instructions yet. Create one to get started.</p>}
+        {visibleCategories.length ? visibleCategories.map((category) => <CategoryCard key={category.id} category={category} flowArchived={flow.status === "archived"} fundingSources={fundingSources} />) : <p className="rounded-2xl border border-[var(--ln)] bg-[var(--cd)] p-6 text-sm text-[var(--mu)]">{needle ? <>Nothing matches “{needle}”.</> : "No Flow instructions yet. Create one to get started."}</p>}
       </section>
 
-      <FlowChildInstructions categories={flowCategories} fundingSources={fundingSources} pays={pays} saves={saves} azas={azas} banks={banks} archived={flow.status === "archived"} />
+      <FlowChildInstructions categories={flowCategories} fundingSources={fundingSources} pays={pays} saves={saves} azas={azas} banks={banks} archived={flow.status === "archived"} query={query} />
 
       <section className="space-y-4">
         <h2 className="text-xl font-semibold">Upcoming runs</h2>
-        {upcoming._tag === "Left" ? (
-          <p className="rounded-2xl border border-[#cbd6d3] bg-white p-5 text-sm text-[#506665]">Upcoming runs are temporarily unavailable.</p>
-        ) : upcoming.right.length === 0 ? (
-          <p className="rounded-2xl border border-[#cbd6d3] bg-white p-5 text-sm text-[#506665]">There are no upcoming runs.</p>
-        ) : upcoming.right.map((run) => (
-          <article key={`${run.category_id}:${run.next_run_at}`} className="rounded-2xl border border-[#dfe7e4] bg-white p-5">
+        {visibleUpcoming._tag === "Left" ? (
+          <p className="rounded-2xl border border-[var(--ln)] bg-[var(--cd)] p-5 text-sm text-[var(--mu)]">Upcoming runs are temporarily unavailable.</p>
+        ) : visibleUpcoming.right.length === 0 ? (
+          <p className="rounded-2xl border border-[var(--ln)] bg-[var(--cd)] p-5 text-sm text-[var(--mu)]">There are no upcoming runs.{needle ? ` Nothing matches “${needle}”.` : ""}</p>
+        ) : visibleUpcoming.right.map((run) => (
+          <article key={`${run.category_id}:${run.next_run_at}`} className="rounded-2xl border border-[var(--ln)] bg-[var(--cd)] p-5">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <h3 className="font-semibold">{run.category_name}</h3>
-                <p className="mt-1 text-sm text-[#506665]">{new Intl.DateTimeFormat("en-NG", { dateStyle: "medium", timeStyle: "short", timeZone: "Africa/Lagos" }).format(new Date(run.next_run_at))} · {run.frequency}</p>
+                <p className="mt-1 text-sm text-[var(--mu)]">{new Intl.DateTimeFormat("en-NG", { dateStyle: "medium", timeStyle: "short", timeZone: "Africa/Lagos" }).format(new Date(run.next_run_at))} · {run.frequency}</p>
               </div>
               <p className="text-lg font-semibold">₦{run.amount}</p>
             </div>
 
-            <div className="mt-4 grid gap-4 border-t border-[#e5ece9] pt-4 md:grid-cols-2">
+            <div className="mt-4 grid gap-4 border-t border-[var(--ln)] pt-4 md:grid-cols-2">
               <div>
                 <p className="text-sm font-semibold">Readiness: {run.readiness.ready ? "Ready" : "Needs attention"}</p>
-                {run.readiness.issues.length ? <ul className="mt-2 list-inside list-disc text-sm text-[#8c3c24]">{run.readiness.issues.map((issue, index) => <li key={`${index}:${issue}`}>{issue}</li>)}</ul> : null}
+                {run.readiness.issues.length ? <ul className="mt-2 list-inside list-disc text-sm text-[var(--er)]">{run.readiness.issues.map((issue, index) => <li key={`${index}:${issue}`}>{issue}</li>)}</ul> : null}
               </div>
               <div>
                 <p className="text-sm font-semibold">Funding: {run.funding.fundable ? "Available" : "Needs attention"}</p>
-                <p className="mt-1 text-sm text-[#506665]">{run.funding.bank_name ?? run.funding.message ?? "No funding source details"}{run.funding.account_number_last4 ? ` ·••• ${run.funding.account_number_last4}` : ""}</p>
+                <p className="mt-1 text-sm text-[var(--mu)]">{run.funding.bank_name ?? run.funding.message ?? "No funding source details"}{run.funding.account_number_last4 ? ` ·••• ${run.funding.account_number_last4}` : ""}</p>
               </div>
             </div>
 
             {run.destinations.length ? (
-              <ul className="mt-4 space-y-2 border-t border-[#e5ece9] pt-4 text-sm">
+              <ul className="mt-4 space-y-2 border-t border-[var(--ln)] pt-4 text-sm">
                 {run.destinations.map((destination) => (
                   <li key={destination.pay_id} className="flex flex-wrap justify-between gap-2">
                     <span>{destination.beneficiary_name ?? destination.bank_name ?? destination.destination_type ?? "Destination"}</span>
@@ -684,32 +698,32 @@ export function FlowJourney({ flow, categories, fundingSources, upcoming, histor
 
       <section className="space-y-4">
         <h2 className="text-xl font-semibold">Run history</h2>
-        {history._tag === "Left" ? (
-          <p className="rounded-2xl border border-[#cbd6d3] bg-white p-5 text-sm text-[#506665]">Run history is temporarily unavailable.</p>
-        ) : history.right.length === 0 ? (
-          <p className="rounded-2xl border border-[#cbd6d3] bg-white p-5 text-sm text-[#506665]">There are no previous runs.</p>
-        ) : history.right.map((entry) => (
-          <article key={entry.id} className="rounded-2xl border border-[#dfe7e4] bg-white p-5">
+        {visibleHistory._tag === "Left" ? (
+          <p className="rounded-2xl border border-[var(--ln)] bg-[var(--cd)] p-5 text-sm text-[var(--mu)]">Run history is temporarily unavailable.</p>
+        ) : visibleHistory.right.length === 0 ? (
+          <p className="rounded-2xl border border-[var(--ln)] bg-[var(--cd)] p-5 text-sm text-[var(--mu)]">There are no previous runs.{needle ? ` Nothing matches “${needle}”.` : ""}</p>
+        ) : visibleHistory.right.map((entry) => (
+          <article key={entry.id} className="rounded-2xl border border-[var(--ln)] bg-[var(--cd)] p-5">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <h3 className="font-semibold">{entry.category_name}</h3>
-                <p className="mt-1 text-sm capitalize text-[#506665]">{entry.status} · {new Intl.DateTimeFormat("en-NG", { dateStyle: "medium", timeStyle: "short", timeZone: "Africa/Lagos" }).format(new Date(entry.created_at))}</p>
+                <p className="mt-1 text-sm capitalize text-[var(--mu)]">{entry.status} · {new Intl.DateTimeFormat("en-NG", { dateStyle: "medium", timeStyle: "short", timeZone: "Africa/Lagos" }).format(new Date(entry.created_at))}</p>
               </div>
               <div className="text-right">
                 <p className="text-lg font-semibold">₦{entry.total_amount}</p>
-                <p className="text-xs text-[#506665]">Fee ₦{entry.fee}</p>
+                <p className="text-xs text-[var(--mu)]">Fee ₦{entry.fee}</p>
               </div>
             </div>
 
-            <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 border-t border-[#e5ece9] pt-4 text-sm text-[#506665]">
+            <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 border-t border-[var(--ln)] pt-4 text-sm text-[var(--mu)]">
               <span>Recovery: {entry.recovery_status}</span>
               {entry.recovery_attempts !== null && entry.recovery_attempts !== undefined ? <span>Recovery attempts: {entry.recovery_attempts}</span> : null}
               {entry.settled_at ? <span>Settled {new Intl.DateTimeFormat("en-NG", { dateStyle: "medium", timeZone: "Africa/Lagos" }).format(new Date(entry.settled_at))}</span> : null}
-              {entry.failure_reason ? <span className="text-[#8c3c24]">{entry.failure_reason}</span> : null}
+              {entry.failure_reason ? <span className="text-[var(--er)]">{entry.failure_reason}</span> : null}
             </div>
 
             {entry.children.length ? (
-              <ul className="mt-4 space-y-2 border-t border-[#e5ece9] pt-4 text-sm">
+              <ul className="mt-4 space-y-2 border-t border-[var(--ln)] pt-4 text-sm">
                 {entry.children.map((child) => (
                   <li key={child.id} className="flex flex-wrap justify-between gap-2">
                     <span>{child.beneficiary_name ?? child.account_name ?? child.bank_name ?? child.destination_type ?? "Destination"} · {child.item_status ?? child.status}</span>

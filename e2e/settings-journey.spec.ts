@@ -6,11 +6,12 @@ test("a customer can review consent and deactivate their account", async ({
   await page.goto("/signup")
   await page.getByRole("textbox", { name: "Full name" }).fill("Journey Test")
   await page.getByRole("textbox", { name: "Email address" }).fill("journey@example.test")
-  await page.getByLabel("Password").fill("safe-test-password")
+  await page.getByLabel("Password", { exact: true }).fill("safe-test-password")
   await page.getByRole("button", { name: "Create account" }).click()
 
   await expect(page).toHaveURL(/\/$/, { timeout: 15_000 })
-  await page.getByRole("link", { name: "Settings" }).click()
+  await page.getByRole("button", { name: "Account menu" }).click()
+  await page.getByRole("menuitem", { name: "Settings" }).click()
   await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible()
 
   const policyLink = page.getByRole("link", {

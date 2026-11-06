@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { connection } from "next/server"
+import { ArrowLeft } from "lucide-react"
 import { FundingJourney } from "@/components/funding-forms"
 import { AccessTokenContext, HttpContext } from "@/src/application/context"
 import { Outcome } from "@/src/application/errors"
@@ -30,15 +31,21 @@ function* loadFundingPage(): Operation<Outcome<FundingPageData>> {
 }
 
 /** Render the funding-source onboarding and verification journey. */
-export default async function FundingPage() {
+export default async function FundingPage({
+  searchParams,
+}: {
+  readonly searchParams: Promise<{ readonly q?: string }>
+}) {
   await connection()
   const config = loadServerConfig()
+  const { q } = await searchParams
+  const query = (q ?? "").trim()
 
   if (!config) {
     return (
-      <main id="main-content" tabIndex={-1} className="min-h-svh bg-[#f3f5f1] p-12 text-[#172d31]">
-        <h1 className="text-3xl font-semibold">Funding unavailable</h1>
-        <p className="mt-3">Please try again in a moment.</p>
+      <main id="main-content" tabIndex={-1} className="azapay-page p-8">
+        <h1 className="azapay-display-title">Funding unavailable</h1>
+        <p className="azapay-muted mt-3">Please try again in a moment.</p>
       </main>
     )
   }
@@ -53,27 +60,27 @@ export default async function FundingPage() {
   })
 
   return (
-    <main id="main-content" tabIndex={-1} className="min-h-svh bg-[#f3f5f1] px-6 py-10 text-[#172d31]">
-      <div className="mx-auto max-w-5xl">
+    <main id="main-content" tabIndex={-1} className="azapay-page">
+      <div className="azapay-page-inner">
         <Link
           href="/"
-          className="text-sm font-semibold text-[#a54d2f] hover:underline"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--bl)] hover:underline"
         >
-          ← Account
+          <ArrowLeft size={16} aria-hidden="true" /> Account
         </Link>
 
-        <h1 className="mt-5 text-4xl font-semibold tracking-tight">
+        <h1 className="azapay-display-title mt-4">
           Funding sources
         </h1>
-        <p className="mt-2 max-w-2xl text-[#506665]">
+        <p className="azapay-muted mt-2 max-w-2xl">
           Connect a bank account or card, verify it with the provider, and keep your
           preferred source ready for future spending rules.
         </p>
 
         {outcome._tag === "Left" ? (
-          <section className="mt-8 rounded-2xl border border-[#cbd6d3] bg-white p-8">
-            <h2 className="text-2xl font-semibold">Funding unavailable</h2>
-            <p className="mt-2 text-[#506665]">
+          <section className="azapay-panel mt-8">
+            <h2 className="text-2xl font-extrabold text-[var(--ink)]">Funding unavailable</h2>
+            <p className="azapay-muted mt-2">
               We couldn’t load your linked funding sources right now. Please refresh
               and try again.
             </p>
@@ -83,6 +90,7 @@ export default async function FundingPage() {
             <FundingJourney
               banks={outcome.right.banks}
               connections={outcome.right.connections}
+              query={query}
             />
           </div>
         )}
