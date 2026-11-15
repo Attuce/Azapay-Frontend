@@ -11,6 +11,7 @@
 | [0007](0007-testing-stack.md)                 | Accepted                   | Use Vitest, React Testing Library, and Playwright for frontend tests      |
 | [0008](0008-direct-jamx-capabilities.md)      | Accepted                   | Inject Jamx's HTTP handler and logger directly through Effection context  |
 | [0009](0009-server-action-boundary-throws.md) | Accepted                   | Permit throws at Next.js server-action boundaries                         |
+| [0010](0010-clerk-authentication.md)         | Accepted                   | Use Clerk for credentials and sessions; pass its bearer token to AzaPay   |
 
 Records are numbered in creation order. Accepted records describe decisions
 explicitly established for this project. Proposed records remain reviewable

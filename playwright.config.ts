@@ -4,7 +4,7 @@ const baseURL = "http://127.0.0.1:3100"
 const browserTestEnv = {
   ...process.env as Record<string, string>,
   AZAPAY_API_URL: "http://127.0.0.1:3101",
-  AZAPAY_SESSION_KEY: Buffer.alloc(32, 7).toString("base64"),
+  AZAPAY_E2E_TEST_MODE: "true",
 }
 
 export default defineConfig({

@@ -2,13 +2,13 @@ import { compose, createFetchHandler, withAuth, withBaseUrl } from "@jamx/http"
 import { run } from "effection"
 import { expect, test, vi } from "vitest"
 import { HttpContext } from "../../application/context"
-import { currentUser, refreshTokens, register, signIn } from "./operations"
+import { currentUser } from "./operations"
 
 const user = {
   id: "40e1d68b-93af-4cd6-af8f-5a025d788dd1",
   email: "ada@example.com",
-  username: null,
   full_name: "Ada Okon",
+  username: null,
   phone_number: null,
   status: "active",
   currency: "NGN",
@@ -19,76 +19,27 @@ const user = {
   updated_at: "2026-09-24T10:00:00Z",
 }
 
-function client(fetch: typeof globalThis.fetch, authenticated = false) {
+function client(fetch: typeof globalThis.fetch) {
   return compose(
     withBaseUrl("https://api.example.test"),
-    ...(authenticated ? [withAuth("access")] : [])
+    withAuth("clerk-session-token")
   )(createFetchHandler({ fetch }))
 }
 
-test("sign-in sends the OpenAPI payload and validates the token response", async () => {
+test("current principal uses the Clerk bearer token and validates the API user", async () => {
   const fetch = vi.fn<typeof globalThis.fetch>(async (input, init) => {
     const request = new Request(input, init)
-    expect(new URL(request.url).pathname).toBe("/v1/auth/login")
-    expect(request.method).toBe("POST")
-    expect(await request.json()).toEqual({
-      email: "ada@example.com",
-      password: "secret123",
-    })
-    return Response.json({
-      access_token: "access",
-      refresh_token: "refresh",
-      expires_at: "2026-09-24T11:00:00Z",
-      refresh_expires_at: "2026-10-24T10:00:00Z",
-      user,
-    })
-  })
-
-  const result = await run(function* () {
-    yield* HttpContext.set(client(fetch, true))
-    return yield* signIn({ email: "ada@example.com", password: "secret123" })
-  })
-  expect(result._tag).toBe("Right")
-  expect(fetch).toHaveBeenCalledOnce()
-})
-
-test("invalid registration never reaches the API", async () => {
-  const fetch = vi.fn<typeof globalThis.fetch>(async () => Response.json({}))
-  const result = await run(function* () {
-    yield* HttpContext.set(client(fetch, true))
-    return yield* register({
-      email: "invalid",
-      password: "short",
-      full_name: "Ada Okon",
-    })
-  })
-  expect(result).toEqual({
-    _tag: "Left",
-    left: { kind: "invalid-request", operation: "register" },
-  })
-  expect(fetch).not.toHaveBeenCalled()
-})
-
-test("refresh rotates the presented refresh token", async () => {
-  const fetch = vi.fn<typeof globalThis.fetch>(async (input, init) => {
-    const request = new Request(input, init)
-    expect(new URL(request.url).pathname).toBe("/v1/auth/refresh")
-    expect(await request.json()).toEqual({ refresh_token: "old-refresh" })
-
-    return Response.json({
-      access_token: "new-access",
-      refresh_token: "new-refresh",
-      expires_at: "2099-01-01T01:00:00Z",
-      refresh_expires_at: "2099-02-01T00:00:00Z",
-    })
+    expect(new URL(request.url).pathname).toBe("/v1/auth/me")
+    expect(request.headers.get("authorization")).toBe("Bearer clerk-session-token")
+    return Response.json(user)
   })
 
   const result = await run(function* () {
     yield* HttpContext.set(client(fetch))
-    return yield* refreshTokens({ refresh_token: "old-refresh" })
+    return yield* currentUser()
   })
 
-  expect(result._tag).toBe("Right")
+  expect(result).toEqual({ _tag: "Right", right: user })
   expect(fetch).toHaveBeenCalledOnce()
 })
 

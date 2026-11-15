@@ -1,8 +1,8 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
-  "globalEnv": ["AZAPAY_API_URL"],
-  "globalPassThroughEnv": ["AZAPAY_SESSION_KEY", "NODE_ENV"],
+  "globalEnv": ["AZAPAY_API_URL", "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"],
+  "globalPassThroughEnv": ["CLERK_SECRET_KEY", "NODE_ENV", "AZAPAY_E2E_TEST_MODE"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

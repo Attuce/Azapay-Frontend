@@ -73,28 +73,15 @@ const server = createServer(async (request, response) => {
     return
   }
 
-  if (url.pathname === "/v1/auth/register" && method === "POST") {
+  if (url.pathname === "/__test/reset" && method === "POST") {
     consents = { required_consents: { terms: "2026-10" }, my_consents: {} }
     fundingConnections = []
-    const now = new Date().toISOString()
-    const input = await readBody(request)
-    respond(response, 201, {
-      access_token: "test-access-token",
-      refresh_token: "test-refresh-token",
-      expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
-      refresh_expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-      user: {
-        ...user,
-        email: input.email,
-        full_name: input.full_name,
-        created_at: now,
-        updated_at: now,
-      },
-    })
+    response.writeHead(204)
+    response.end()
     return
   }
 
-  if (url.pathname.startsWith("/v1/") && !url.pathname.startsWith("/v1/auth/register")) {
+  if (url.pathname.startsWith("/v1/")) {
     if (request.headers.authorization !== "Bearer test-access-token") {
       respond(response, 401, { detail: "Unauthorized" })
       return

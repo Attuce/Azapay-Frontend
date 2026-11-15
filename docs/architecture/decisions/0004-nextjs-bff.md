@@ -1,7 +1,7 @@
 # ADR 0004: Use Next.js as a thin backend for the frontend
 
 - Date: 2026-09-24
-- Status: Accepted
+- Status: Superseded in part by ADR 0010
 
 ## Context
 
@@ -32,14 +32,16 @@ and its [authentication guidance](https://nextjs.org/docs/app/guides/authenticat
 - Effection remains the application backbone on both sides of the runtime
   boundary; the BFF is an entry point and adapter.
 
-## Implementation status
+## Implementation status at the time of this decision
 
 The first stage uses server actions for registration, sign-in, and sign-out.
 An encrypted HttpOnly cookie contains the backend token pair. The account page
 reads the cookie on the server and calls `/v1/auth/me` for current user data.
-The server entry point reads deployment settings and supplies them through
-Effection context; session operations do not read environment variables.
-Access-token refresh and authenticated financial journeys are later stages.
+The server entry point read deployment settings and supplied them through
+Effection context; session operations did not read environment variables.
+Access-token refresh and authenticated financial journeys were later stages.
+The original credential and token-pair design was superseded by ADR 0010 after
+the live API contract established Clerk as its session provider.
 
 ## Review trigger
 

@@ -3,13 +3,16 @@ import { expect, test } from "@playwright/test"
 test("a customer can review consent and deactivate their account", async ({
   page,
 }) => {
-  await page.goto("/signup")
-  await page.getByRole("textbox", { name: "Full name" }).fill("Journey Test")
-  await page.getByRole("textbox", { name: "Email address" }).fill("journey@example.test")
-  await page.getByLabel("Password").fill("safe-test-password")
-  await page.getByRole("button", { name: "Create account" }).click()
-
-  await expect(page).toHaveURL(/\/$/, { timeout: 15_000 })
+  await fetch("http://127.0.0.1:3101/__test/reset", { method: "POST" })
+  await page.context().addCookies([{
+    name: "azapay_e2e_session",
+    value: "enabled",
+    domain: "127.0.0.1",
+    path: "/",
+    httpOnly: true,
+    sameSite: "Lax",
+  }])
+  await page.goto("/")
   await page.getByRole("link", { name: "Settings" }).click()
   await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible()
 
@@ -26,6 +29,7 @@ test("a customer can review consent and deactivate their account", async ({
   await expect(page.getByRole("status")).toHaveText("Consent recorded.")
   await expect(page.getByText("Accepted current version")).toBeVisible()
 
+  await page.goto("/settings")
   await page.locator('input[name="confirmation"]').fill("DEACTIVATE")
   await page.getByRole("button", { name: "Deactivate account" }).click()
   await expect(page).toHaveURL(/\/login\?status=deactivated$/)
@@ -35,6 +39,7 @@ test("a customer can review consent and deactivate their account", async ({
     })
   ).toBeVisible()
 
+  await page.context().clearCookies()
   await page.goto("/settings")
   await expect(page).toHaveURL(/\/login$/)
 })

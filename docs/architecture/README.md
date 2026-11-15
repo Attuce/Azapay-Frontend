@@ -15,8 +15,8 @@ that the current repository implements them.
 3. The [architecture decision records](decisions/README.md) capture the chosen
    application structure and the rationale for consequential changes.
 
-The contract inspected for this first version was AzaPay API `0.4.0` (79 paths,
-100 operations). Recheck the live contract before implementing each module.
+The currently inspected contract is AzaPay API `0.4.0` (75 paths, 96
+operations). Recheck the live contract before implementing each module.
 For operations the frontend uses, maintain Zod request and response schemas
 aligned with that contract and infer their TypeScript types from the schemas.
 The OpenAPI document remains authoritative; see
@@ -33,7 +33,9 @@ flowchart LR
 ```
 
 The browser renders the experience and starts actions. The web runtime is the
-session and API boundary; see [ADR 0004](decisions/0004-nextjs-bff.md).
+API boundary and uses Clerk for identity and browser sessions; see
+[ADR 0010](decisions/0010-clerk-authentication.md). It forwards Clerk's
+short-lived bearer token to the AzaPay API inside the server runtime.
 The AzaPay API remains authoritative. Partner webhooks and settlement processing
 belong to that backend, outside this frontend application.
 
@@ -97,8 +99,8 @@ withdrawal quotes and status. Next.js pages and actions adapt customer input to
 those operations; the API remains authoritative for balances, closure rules,
 withdrawal charges, maturity, and settlement.
 The `settings` module also owns API-backed consent state, consent acceptance,
-and account deactivation. Deactivation clears the local session only after the
-API confirms the request and revokes all sessions.
+and account deactivation. Deactivation first requires AzaPay confirmation, then
+revokes the user's active Clerk sessions.
 Shared code should be limited to cross-cutting capabilities such as money
 formatting, dates, session, and transport.
 

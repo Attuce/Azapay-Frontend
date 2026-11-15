@@ -77,7 +77,7 @@ export default async function SettingsPage() {
         </div>
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
           <ConsentManager consent={outcome.right.consent} />
-          <AccountClosureForm />
+          <AccountClosureForm testMode={config.e2eTestMode} />
         </div>
       </div>
     </main>

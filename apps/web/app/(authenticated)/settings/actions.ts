@@ -17,8 +17,7 @@ import {
 } from "@/src/features/settings/schemas"
 import { loadServerConfig, ServerConfigContext } from "@/src/server/config"
 import { createAuthenticatedServerHttp } from "@/src/server/http"
-import { clearSession, readUsableSession } from "@/src/server/session"
-import { redirect } from "next/navigation"
+import { readUsableSession, revokeAllUserSessions } from "@/src/server/session"
 
 export type SettingsFormState = { message: string; success?: boolean } | null
 
@@ -151,10 +150,23 @@ export async function deactivateAccountAction(
     const http = yield* createAuthenticatedServerHttp()
     yield* HttpContext.set(http)
     const deactivated = yield* deactivateAccount()
-    if (deactivated._tag === "Left") return false
-    yield* clearSession()
-    return true
+    if (deactivated._tag === "Left") {
+      return { deactivated: false, sessionsRevoked: false }
+    }
+
+    return {
+      deactivated: true,
+      sessionsRevoked: yield* revokeAllUserSessions(),
+    }
   })
-  if (!result) return { message: "We couldn’t deactivate your account. Try again later." }
-  redirect("/login?status=deactivated")
+  if (!result.deactivated) {
+    return { message: "We couldn’t deactivate your account. Try again later." }
+  }
+
+  return {
+    message: result.sessionsRevoked
+      ? "Your account is deactivated. Signing you out…"
+      : "Your account is deactivated, but we couldn’t revoke every sign-in session. Contact support.",
+    success: true,
+  }
 }

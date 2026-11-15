@@ -4,19 +4,28 @@ The [OpenAPI contract](https://azapay.onrender.com/openapi.json) supplies the en
 
 | Stage | Customer journey                                                               | Status      |
 | ----- | ------------------------------------------------------------------------------ | ----------- |
-| 1     | Register, sign in, view current account details, sign out                      | Implemented |
-| 2     | Refresh expiring sessions; profile and account settings                        | Implemented |
+| 1     | Clerk sign-up, sign-in, password recovery, current account details, sign out   | Implemented |
+| 2     | Clerk-managed session renewal; profile and account settings                   | Implemented |
 | 3     | Read the backend's overview, Flow, categories, and activity                    | Implemented |
 | 4     | Connect funding sources and handle provider steps                              | Implemented |
 | 5     | Create and manage Flow spending and saving instructions                        | Implemented |
 | 6     | Create and manage Azas, invitations, contributions, and withdrawals            | Implemented |
 | 7     | Complete settings, consent, deactivation, accessibility, and journey hardening | Implemented |
 
-Stage 1 uses `/v1/auth/register`, `/v1/auth/login`, `/v1/auth/me`, and `/v1/auth/logout`. Session tokens stay in an encrypted HttpOnly cookie. A backend logout call is attempted while the access token is valid; the browser session is always cleared.
+Stage 1 uses Clerk for registration, sign-in, forgot/reset password, session
+renewal, and sign-out. The frontend sends Clerk's short-lived session token to
+`/v1/auth/me` to read the AzaPay principal. AzaPay does not expose credential,
+refresh, or logout routes in the inspected OpenAPI contract.
 
-Stage 2 rotates expired sessions through `/v1/auth/refresh` before returning to
-the requested local page. Profile and preference screens use `/v1/users/me` and
-`/v1/settings`; updates remain contract-validated server actions.
+Stage 2 uses Clerk-managed session renewal before protected reads and actions.
+Profile and preference screens use `/v1/users/me` and `/v1/settings`; updates
+remain contract-validated server actions. After the AzaPay deactivation request
+succeeds, all active Clerk sessions are revoked before the browser is signed out.
+
+Existing account data and password hashes cannot be transferred by this
+frontend: the AzaPay contract has no user export or identity-linking endpoint.
+Production migration requires a coordinated export/import process and account
+matching policy outside this UI.
 
 Stage 3 renders `/v1/analytics/overview`, `/v1/flows/me`, `/v1/categories`,
 and `/v1/audit/events` as a read-only customer dashboard. It preserves the API

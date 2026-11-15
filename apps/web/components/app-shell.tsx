@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from "react"
 import { usePathname } from "next/navigation"
+import Link from "next/link"
 import { BarChart3, Home, Plus, Shield, Wallet, X } from "lucide-react"
-import { logoutAction } from "@/app/auth/actions"
+import { SignOutButton } from "@clerk/nextjs"
 
 const navigation = [
   { href: "/", label: "Home", icon: Home },
@@ -13,7 +14,7 @@ const navigation = [
 ]
 
 /** Shared signed-in navigation and the Add entry point for money journeys. */
-export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) {
+export function AppShell({ children, testMode = false }: Readonly<{ children: React.ReactNode; testMode?: boolean }>) {
   const pathname = usePathname()
   const [addOpen, setAddOpen] = useState(false)
   const addDialogRef = useRef<HTMLElement>(null)
@@ -79,9 +80,13 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
             <a href="/funding">Funding</a>
             <a href="/settings">Settings</a>
           </div>
-          <form action={logoutAction}>
-            <button className="azapay-login-button">Sign out</button>
-          </form>
+          {testMode ? (
+            <Link href="/login" className="azapay-login-button">Sign out</Link>
+          ) : (
+            <SignOutButton redirectUrl="/login">
+              <button className="azapay-login-button">Sign out</button>
+            </SignOutButton>
+          )}
         </div>
       </aside>
 

@@ -1,10 +1,17 @@
 import "@workspace/ui/globals.css"
+import { ClerkProvider } from "@clerk/nextjs"
+import { loadServerConfig } from "@/src/server/config"
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const config = loadServerConfig()
+  const clerkConfigured = Boolean(
+    config?.clerkPublishableKey && config.clerkSecretKey
+  )
+
   return (
     <html lang="en" className="antialiased">
       <body
@@ -16,7 +23,15 @@ export default function RootLayout({
         >
           Skip to main content
         </a>
-        {children}
+        {clerkConfigured && config?.clerkPublishableKey ? (
+          <ClerkProvider
+            publishableKey={config.clerkPublishableKey}
+            signInUrl="/login"
+            signUpUrl="/signup"
+          >
+            {children}
+          </ClerkProvider>
+        ) : children}
       </body>
     </html>
   )

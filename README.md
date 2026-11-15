@@ -4,9 +4,9 @@ The customer web app lives in `apps/web`. The [AzaPay OpenAPI contract](https://
 
 ## Run locally
 
-Use Node 25. Install dependencies with `npm install`, then copy `.env.example` to `apps/web/.env.local`. Set `AZAPAY_SESSION_KEY` to a fresh 32-byte key from `openssl rand -base64 32`. `AZAPAY_API_URL` defaults to `https://azapay.onrender.com`. Run `npm run dev`.
+Use Node 25. Install dependencies with `npm install`, then copy `.env.example` to `apps/web/.env.local` and set the Clerk publishable and secret keys for the configured Clerk instance. `AZAPAY_API_URL` defaults to `https://azapay.onrender.com`. Clerk manages sign-in, sign-up, password recovery, and browser sessions; the app sends its short-lived session token to AzaPay for `/v1/auth/me` and feature requests. Run `npm run dev`.
 
-The first implemented stage covers registration, sign-in, current account details, and sign-out. Tokens are stored in an encrypted HttpOnly cookie, so browser JavaScript does not receive them. Token refresh is not implemented yet; an expired access token requires signing in again.
+Clerk handles registration, sign-in, forgot/reset password, and session lifecycle. AzaPay's `/v1/auth/me` endpoint resolves the account associated with the Clerk session token. Existing account records require a coordinated Clerk import or linking process before production rollout; the exposed AzaPay API does not provide user export or identity-linking endpoints.
 
 ## Architecture and checks
 

@@ -1,6 +1,8 @@
 "use client"
 
 import { useActionState } from "react"
+import { useEffect } from "react"
+import { useClerk } from "@clerk/nextjs"
 import {
   acceptConsentAction,
   deactivateAccountAction,
@@ -250,8 +252,23 @@ export function ConsentManager({ consent }: { readonly consent: Consent }) {
 }
 
 /** Require a deliberate typed confirmation before asking the API to deactivate the account. */
-export function AccountClosureForm() {
+function ClerkSignOutAfterDeactivation() {
+  const { signOut } = useClerk()
+  useEffect(() => {
+    void signOut({ redirectUrl: "/login?status=deactivated" })
+  }, [signOut])
+  return null
+}
+
+export function AccountClosureForm({ testMode = false }: { readonly testMode?: boolean }) {
   const [state, action, pending] = useActionState(deactivateAccountAction, null)
+
+  useEffect(() => {
+    if (testMode && state?.success) {
+      window.location.assign("/login?status=deactivated")
+    }
+  }, [state?.success, testMode])
+
   return (
     <form action={action} className="rounded-2xl border border-[#d6a392] bg-white p-6">
       <h2 className="text-xl font-semibold">Close account</h2>
@@ -261,6 +278,7 @@ export function AccountClosureForm() {
         <input className={inputClass} name="confirmation" autoComplete="off" required pattern="DEACTIVATE" />
       </label>
       <Status state={state} />
+      {state?.success && !testMode ? <ClerkSignOutAfterDeactivation /> : null}
       <button disabled={pending} className="mt-4 rounded-full bg-[#8c3c24] px-5 py-2.5 font-semibold text-white disabled:opacity-60">
         {pending ? "Closing account…" : "Deactivate account"}
       </button>

@@ -19,7 +19,7 @@ test("a visitor can move between sign-in and sign-up", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "Create your account" })
   ).toBeVisible()
-  await expect(page.getByRole("textbox", { name: "Full name" })).toBeVisible()
+  await expect(page.getByRole("status")).toContainText("Sign-in is not configured yet")
 
   await page.getByRole("link", { name: "Sign in" }).click()
   await expect(

@@ -15,14 +15,14 @@ export default async function AuthenticatedLayout({
   await connection()
   const config = loadServerConfig()
 
-  if (!config) return <AppShell>{children}</AppShell>
+  if (!config) redirect("/login")
 
   const session = await run(function* () {
     yield* ServerConfigContext.set(config)
     return yield* readPageSession()
   })
 
-  if (session.kind === "missing") redirect("/login")
+  if (!session) redirect("/login")
 
-  return <AppShell>{children}</AppShell>
+  return <AppShell testMode={config.e2eTestMode}>{children}</AppShell>
 }
